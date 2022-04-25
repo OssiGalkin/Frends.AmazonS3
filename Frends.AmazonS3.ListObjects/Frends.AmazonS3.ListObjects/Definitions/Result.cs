@@ -10,7 +10,12 @@ namespace Frends.AmazonS3.ListObjects.Definitions
         /// <summary>
         /// List of objects.
         /// </summary>
-        public List<BucketObject> ObjectList { get; set; }
+        public List<BucketObject> ObjectList { get; private set; }
+
+        internal Result(List<BucketObject> bucketObject)
+        {
+            ObjectList = bucketObject;
+        }
     }
 }
 

@@ -4,9 +4,9 @@ namespace Frends.AmazonS3.ListObjects.Definitions
     /// <summary>
     /// AWS regions.
     /// </summary>
-    public enum Regions
+    public enum Region
     {
-        #pragma warning disable CS1591 // Regions. No need for XML.
+        #pragma warning disable CS1591 // AWS region(s). No need for specific XML.
         AfSouth1,
         ApEast1,
         ApNortheast1,

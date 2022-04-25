@@ -35,12 +35,6 @@ namespace Frends.AmazonS3.ListObjects.Definitions
         /// </summary>
         /// <example>2022-04-22T00:16:40+02:00</example>
         public string StartAfter { get; set; }
-
-        /// <summary>
-        /// ContinuationToken indicates Amazon S3 that the list is being continued on this bucket with a token. ContinuationToken is obfuscated and is not a real key.
-        /// </summary>
-        /// <example>TVh5hgd3uGY/2CqH+Kkrrg3dadbXLsYe0jC3h+WD</example>
-        public string ContinuationToken { get; set; }
     }
 }
 

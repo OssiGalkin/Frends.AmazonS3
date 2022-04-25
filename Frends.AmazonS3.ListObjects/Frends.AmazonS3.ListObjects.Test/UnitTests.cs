@@ -11,27 +11,26 @@ namespace Frends.AmazonS3.ListObjects.Test
         private readonly string _secretAccessKey = Environment.GetEnvironmentVariable("HiQ_AWSS3Test_SecretAccessKey");
         private readonly string _bucketName = Environment.GetEnvironmentVariable("HiQ_AWSS3Test_BucketName");
 
-        Source _source;
-        Options _options;
+        Source? _source = null;
+        Options? _options = null;
 
 
         /// <summary>
         /// List all objects.
         /// </summary>
         [TestMethod]
-        public void ListAll()
+        public void ListAllTest()
         {
             _source = new Source
             {
                 AwsAccessKeyId = _accessKey,
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
-                Region = Regions.EuCentral1
+                Region = Region.EuCentral1
             };
 
             _options = new Options
             {
-                ContinuationToken = null,
                 Delimiter = null,
                 MaxKeys = 100,
                 Prefix = null,
@@ -43,22 +42,21 @@ namespace Frends.AmazonS3.ListObjects.Test
         }
 
         /// <summary>
-        /// StartAfter.
+        /// With StartAfter value. Get objects created after 2022-04-22T00:16:40+02:00.
         /// </summary>
         [TestMethod]
-        public void StartAfter()
+        public void UsingStartAfterTest()
         {
             _source = new Source
             {
                 AwsAccessKeyId = _accessKey,
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
-                Region = Regions.EuCentral1
+                Region = Region.EuCentral1
             };
 
             _options = new Options
             {
-                ContinuationToken = null,
                 Delimiter = null,
                 MaxKeys = 100,
                 Prefix = null,
@@ -70,22 +68,21 @@ namespace Frends.AmazonS3.ListObjects.Test
         }
 
         /// <summary>
-        /// Prefix.
+        /// With Prefix value. Get objects from 2020/11/23/ locations.
         /// </summary>
         [TestMethod]
-        public void Prefix()
+        public void UsingPrefixTest()
         {
             _source = new Source
             {
                 AwsAccessKeyId = _accessKey,
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
-                Region = Regions.EuCentral1
+                Region = Region.EuCentral1
             };
 
             _options = new Options
             {
-                ContinuationToken = null,
                 Delimiter = null,
                 MaxKeys = 100,
                 Prefix = "2020/11/23/",
@@ -97,22 +94,21 @@ namespace Frends.AmazonS3.ListObjects.Test
         }
 
         /// <summary>
-        /// Authentication fail.
+        /// Missing AwsAccessKeyId. Authentication fail.
         /// </summary>
         [TestMethod]
-        public void MissingKey()
+        public void MissingKeyTest()
         {
             _source = new Source
             {
                 AwsAccessKeyId = null,
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
-                Region = Regions.EuCentral1
+                Region = Region.EuCentral1
             };
 
             _options = new Options
             {
-                ContinuationToken = null,
                 Delimiter = null,
                 MaxKeys = 100,
                 Prefix = null,
