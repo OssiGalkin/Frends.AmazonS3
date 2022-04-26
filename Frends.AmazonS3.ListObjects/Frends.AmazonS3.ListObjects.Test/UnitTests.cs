@@ -32,7 +32,7 @@ namespace Frends.AmazonS3.ListObjects.Test
             _options = new Options
             {
                 Delimiter = null,
-                MaxKeys = 100,
+                MaxKeys = 1000,
                 Prefix = null,
                 StartAfter = null
             };
@@ -60,7 +60,7 @@ namespace Frends.AmazonS3.ListObjects.Test
                 Delimiter = null,
                 MaxKeys = 100,
                 Prefix = null,
-                StartAfter = "2022-04-22T00:16:40+02:00"
+                StartAfter = "testfolder/subfolder/20220401.txt"
             };
 
             var result = AmazonS3.ListObjects(_source, _options, default);

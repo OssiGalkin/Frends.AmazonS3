@@ -23,17 +23,17 @@ namespace Frends.AmazonS3.ListObjects.Definitions
         public string Delimiter { get; set; }
 
         /// <summary>
-        /// Sets the maximum number of keys returned in the response. By default the action returns up to 1,000 key names.
+        /// Sets the maximum number of keys returned in the response. Returns up to 1,000 key names. The response might contain fewer keys but will never contain more.
         /// </summary>
         /// <example>1000</example>
-        [DefaultValue(100)]
-        [DisplayFormat(DataFormatString = "Text")]
+        [DefaultValue(1000)]
         public int MaxKeys { get; set; }
 
         /// <summary>
-        /// StartAfter is where you want Amazon S3 to start listing from.
+        /// StartAfter is where you want Amazon S3 to start listing from. 
+        /// Eg. In a bucket of objects { 20220401, 20220402, 20220403 }, StartAfter=20220401 returns objects 20220402 and 20220403.
         /// </summary>
-        /// <example>2022-04-22T00:16:40+02:00</example>
+        /// <example>20220401</example>
         public string StartAfter { get; set; }
     }
 }

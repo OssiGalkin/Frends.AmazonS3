@@ -34,8 +34,7 @@ namespace Frends.AmazonS3.ListObjects
             return new Result(response);
         }
 
-#pragma warning disable CS1591 // Helping methods. No need for XML.
-        public static async Task<List<BucketObject>> ListBucketContentsAsync(AmazonS3Client client, Source source, Options options, CancellationToken cancellationToken)
+        private static async Task<List<BucketObject>> ListBucketContentsAsync(AmazonS3Client client, Source source, Options options, CancellationToken cancellationToken)
         {
             try
             {
@@ -43,7 +42,7 @@ namespace Frends.AmazonS3.ListObjects
                 var request = GetListObjectsV2Request(source, options);
                 var response = new ListObjectsV2Response();
 
-                do
+                while (request != null && !response.IsTruncated)
                 {
                     response = await client.ListObjectsV2Async(request, cancellationToken);
 
@@ -60,9 +59,11 @@ namespace Frends.AmazonS3.ListObjects
 
                         });
                     }
-                    request.ContinuationToken = response.NextContinuationToken;
+                    if (response.IsTruncated)
+                        request.ContinuationToken = response.NextContinuationToken;
+                    else
+                        request = null;
                 }
-                while (response.IsTruncated);
 
                 return data;
             }
@@ -76,7 +77,7 @@ namespace Frends.AmazonS3.ListObjects
             }
         }
 
-        public static ListObjectsV2Request GetListObjectsV2Request(Source source, Options options)
+        private static ListObjectsV2Request GetListObjectsV2Request(Source source, Options options)
         {
             var request = new ListObjectsV2Request
             {
@@ -92,7 +93,7 @@ namespace Frends.AmazonS3.ListObjects
             return request;
         }
 
-        public static RegionEndpoint RegionSelection(Region region)
+        private static RegionEndpoint RegionSelection(Region region)
         {
             switch (region)
             {
