@@ -16,7 +16,7 @@ namespace Frends.AmazonS3.ListObjects
     public class AmazonS3
     {
         /// <summary>
-        /// List objects in AWS S3.
+        /// Lists objects from specified AWS S3 Bucket.
         /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.AmazonS3.ListObjects)
         /// </summary>
         /// <param name="source">Source connection parameters</param>
