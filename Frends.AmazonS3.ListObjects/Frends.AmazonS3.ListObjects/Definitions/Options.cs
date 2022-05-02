@@ -12,14 +12,12 @@ namespace Frends.AmazonS3.ListObjects.Definitions
         /// Limits the response to keys that begin with the specified prefix.
         /// </summary>
         /// <example>bucket/object1/object2</example>
-        [DefaultValue(null)]
         public string Prefix { get; set; }
 
         /// <summary>
         /// A delimiter is a character you use to group keys. See: http://docs.aws.amazon.com/AmazonS3/latest/dev/ListingKeysHierarchy.html
         /// </summary>
         /// <example>/</example>
-        [DefaultValue(null)]
         public string Delimiter { get; set; }
 
         /// <summary>

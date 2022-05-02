@@ -7,9 +7,9 @@ namespace Frends.AmazonS3.ListObjects.Test
     [TestClass]
     public class ListObjectsTest
     {
-        private readonly string _accessKey = Environment.GetEnvironmentVariable("HiQ_AWSS3Test_AccessKey");
-        private readonly string _secretAccessKey = Environment.GetEnvironmentVariable("HiQ_AWSS3Test_SecretAccessKey");
-        private readonly string _bucketName = Environment.GetEnvironmentVariable("HiQ_AWSS3Test_BucketName");
+        private readonly string? _accessKey = Environment.GetEnvironmentVariable("HiQ_AWSS3Test_AccessKey");
+        private readonly string? _secretAccessKey = Environment.GetEnvironmentVariable("HiQ_AWSS3Test_SecretAccessKey");
+        private readonly string? _bucketName = Environment.GetEnvironmentVariable("HiQ_AWSS3Test_BucketName");
 
         Source? _source = null;
         Options? _options = null;
