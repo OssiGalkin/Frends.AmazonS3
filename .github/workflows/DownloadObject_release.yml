@@ -1,0 +1,18 @@
+name: DownloadObject_release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: FrendsPlatform/FrendsTasks/.github/workflows/release.yml@main
+    with:
+      workdir: Frends.AmazonS3.DownloadObject
+      env_var_name_1: HiQ_AWSS3Test_AccessKey
+      env_var_name_2: HiQ_AWSS3Test_BucketName
+      env_var_name_3: HiQ_AWSS3Test_SecretAccessKey
+    secrets:
+      feed_api_key: ${{ secrets.TASKS_FEED_API_KEY }}
+      env_var_value_1: ${{ secrets.HIQ_AWSS3TEST_ACCESSKEY }}
+      env_var_value_2: ${{ secrets.HIQ_AWSS3TEST_BUCKETNAME }}
+      env_var_value_3: ${{ secrets.HIQ_AWSS3TEST_SECRETACCESSKEY }}
