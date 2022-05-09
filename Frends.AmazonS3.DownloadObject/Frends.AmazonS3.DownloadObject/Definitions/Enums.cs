@@ -7,7 +7,7 @@ namespace Frends.AmazonS3.DownloadObject.Definitions
     public enum Region
     {
         #region regions
-#pragma warning disable CS1591 // AWS region(s). No need for specific XML.
+#pragma warning disable CS1591 // AWS regions. No need for specific XML.
         AfSouth1,
         ApEast1,
         ApNortheast1,

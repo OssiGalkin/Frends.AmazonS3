@@ -8,7 +8,7 @@ namespace Frends.AmazonS3.DownloadObject.Definitions
     public class Result
     {
         /// <summary>
-        /// List of download result(s).
+        /// List of download results.
         /// </summary>
         public List<DownloadResult> Results { get; private set; }
 

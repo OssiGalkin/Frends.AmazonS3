@@ -22,6 +22,7 @@ namespace Frends.AmazonS3.DownloadObject.Definitions
         /// <example>"https://bucket.s3.region.amazonaws.com/object/file.txt?X-Amz-Expires=120X-Amz-Algorithm...</example>
         [PasswordPropertyText]
         [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.PreSignedURL)]
+        [DefaultValue(null)]
         public string PreSignedURL { get; set; }
         #endregion Pre-signed URL
 
@@ -32,6 +33,7 @@ namespace Frends.AmazonS3.DownloadObject.Definitions
         /// <example>AKIAQWERTY7NJ5Q7NZ6Q</example>
         [PasswordPropertyText]
         [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
+        [DefaultValue(null)]
         public string AwsAccessKeyId { get; set; }
 
         /// <summary>
@@ -40,6 +42,7 @@ namespace Frends.AmazonS3.DownloadObject.Definitions
         /// <example>TVh5hgd3uGY/2CqH+Kkrrg3dadbXLsYe0jC3h+WD</example>
         [PasswordPropertyText]
         [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
+        [DefaultValue(null)]
         public string AwsSecretAccessKey { get; set; }
 
         /// <summary>

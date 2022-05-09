@@ -20,6 +20,7 @@ namespace Frends.AmazonS3.DownloadObject.Definitions
         /// </summary>
         /// <example>directory/</example>
         [UIHint(nameof(OptionsFor), "", OptionsFor.AWSCredentials)]
+        [DisplayFormat(DataFormatString = "Text")]
         public string S3Directory { get; set; }
 
         /// <summary>
@@ -27,6 +28,7 @@ namespace Frends.AmazonS3.DownloadObject.Definitions
         /// </summary>
         /// <example>*.*, *file?.txt</example>
         [UIHint(nameof(OptionsFor), "", OptionsFor.AWSCredentials)]
+        [DisplayFormat(DataFormatString = "Text")]
         [DefaultValue("*")]
         public string SearchPattern { get; set; }
 
@@ -34,6 +36,7 @@ namespace Frends.AmazonS3.DownloadObject.Definitions
         /// Directory where to create folders and files.
         /// </summary>
         /// <example>c:\temp, \\network\folder</example>
+        [DisplayFormat(DataFormatString = "Text")]
         public string DestinationPath { get; set; }
 
         /// <summary>
@@ -41,6 +44,7 @@ namespace Frends.AmazonS3.DownloadObject.Definitions
         /// </summary>
         /// <example>File.txt</example>
         [UIHint(nameof(OptionsFor), "", OptionsFor.PreSignedURL)]
+        [DisplayFormat(DataFormatString = "Text")]
         public string FileName { get; set; }
     }
 }

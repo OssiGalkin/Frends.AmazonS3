@@ -32,7 +32,7 @@ namespace Frends.AmazonS3.DownloadObject.Definitions
 
 
         /// <summary>
-        /// Throw an error if there are no object(s) in the path matching the search pattern.
+        /// Throw an error if there are no objects in the path matching the search pattern.
         /// </summary>
         /// <example>false</example>
         [UIHint(nameof(OptionsFor), "", OptionsFor.AWSCredentials)]
@@ -46,7 +46,7 @@ namespace Frends.AmazonS3.DownloadObject.Definitions
         public bool ContinueIfExists { get; set; }
 
         /// <summary>
-        /// Set to true to overwrite object(s) with the same path and name (object key).
+        /// Set to true to overwrite objects with the same path and name (object key).
         /// </summary>
         /// <example>false</example>
         public bool Overwrite { get; set; }
