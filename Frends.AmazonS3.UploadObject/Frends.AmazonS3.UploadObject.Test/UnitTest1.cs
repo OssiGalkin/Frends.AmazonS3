@@ -1,10 +1,10 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using Frends.AmazonS3.UploadObject.Definitions;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon;
 using System.IO;
+using Frends.AmazonS3.UploadObject.Definitions;
 
 namespace Frends.AmazonS3.UploadObject.Test
 {
@@ -21,7 +21,24 @@ namespace Frends.AmazonS3.UploadObject.Test
 
         Connection? _connection;
         Input? _input;
-        Options? _options;
+
+        /// <summary>
+        /// Create test files and folders.
+        /// </summary>
+        [TestInitialize]
+        public void Initialize()
+        {
+            CreateTestFiles();
+        }
+
+        /// <summary>
+        /// Delete test files and folders.
+        /// </summary>
+        [TestCleanup]
+        public void CleanUp()
+        {
+            DeleteSourcePath();
+        }
 
 
         #region PreSigned
@@ -29,7 +46,6 @@ namespace Frends.AmazonS3.UploadObject.Test
         /// PreSigned URL testing.
         /// Presigned URL can be used just once and for 1 file.
         /// </summary>
-        #region TestPreSignedUpload
         [TestMethod]
         public void PreSignedUploadTest()
         {
@@ -50,9 +66,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = null,
                 BucketName = null,
                 Region = default,
-            };
-            _options = new Options
-            {
                 UploadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 PreserveFolderStructure = false,
@@ -61,17 +74,15 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
         }
-        #endregion TestPreSignedUpload
 
-        #region TestPreSignedMissing
         /// <summary>
         /// PreSigned URL testing. Missing URL and ends up to exception before checking files etcc.
         /// </summary>
         [TestMethod]
-        public void PreSignedMissing()
+        public void PreSignedMissingTest()
         {
             _input = new Input
             {
@@ -89,9 +100,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = null,
                 BucketName = null,
                 Region = default,
-            };
-            _options = new Options
-            {
                 UploadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 PreserveFolderStructure = false,
@@ -100,12 +108,10 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.UploadObject(_connection, _input, _options, default)).Result;
+            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.UploadObject(_connection, _input, default)).Result;
             Assert.IsTrue(ex.Message.Contains("AWS pre-signed URL required."));
         }
-        #endregion TestPreSignedMissing
 
-        #region PreSignedNoFileInTopDirectoryTest
         /// <summary>
         /// Presigned URL with UploadFromCurrentDirectoryOnly and ThrowErrorIfNoMatch = true
         /// Presigned URL can be used just once and for 1 file upload -> DeleteMainDirectoryFiles() makes sure that only subdirectory contains the file and top directory is empty.
@@ -113,7 +119,12 @@ namespace Frends.AmazonS3.UploadObject.Test
         [TestMethod]
         public void PreSignedNoFileInTopDirectoryTest()
         {
-            DeleteMainDirectoryFiles();
+            File.Delete($@"{_dir}\AWS\test1.txt");
+            File.Delete($@"{_dir}\AWS\deletethis_presign.txt");
+            File.Delete($@"{_dir}\AWS\deletethis_awscreds.txt");
+            File.Delete($@"{_dir}\AWS\overwrite_presign.txt");
+            File.Delete($@"{_dir}\AWS\overwrite_awscreds.txt");
+
             var setS3Key = $"2022/PreSigned/PreSignedNoFileInTopDirectoryTest.txt"; //Location where file will be uploaded.
 
             _input = new Input
@@ -124,15 +135,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 UseACL = false,
                 S3Directory = null,
             };
-            _options = new Options
-            {
-                UploadFromCurrentDirectoryOnly = true,
-                ThrowErrorIfNoMatch = true,
-                Overwrite = false,
-                PreserveFolderStructure = false,
-                ReturnListOfObjectKeys = false,
-                DeleteSource = false,
-            };
             _connection = new Connection
             {
                 AuthenticationMethod = AuthenticationMethod.PreSignedURL,
@@ -141,19 +143,23 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = null,
                 BucketName = null,
                 Region = default,
+                UploadFromCurrentDirectoryOnly = true,
+                ThrowErrorIfNoMatch = true,
+                Overwrite = false,
+                PreserveFolderStructure = false,
+                ReturnListOfObjectKeys = false,
+                DeleteSource = false,
             };
 
-            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.UploadObject(_connection, _input, _options, default)).Result;
+            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.UploadObject(_connection, _input, default)).Result;
             Assert.IsTrue(ex.Message.Contains("No files match the filemask within supplied path."));
         }
-        #endregion PreSignedNoFileInTopDirectoryTest
 
-        #region PreSignedNoPath
         /// <summary>
         /// Presigned URL with FilePath not found.
         /// </summary>
         [TestMethod]
-        public void PreSignedNoPath()
+        public void PreSignedNoPathTest()
         {
             var setS3Key = $"2022/PreSigned/PreSignedNoPath.txt"; //Location where file will be uploaded. This file should not exists in S3.
             _input = new Input
@@ -164,15 +170,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 UseACL = false,
                 S3Directory = null,
             };
-            _options = new Options
-            {
-                UploadFromCurrentDirectoryOnly = true,
-                ThrowErrorIfNoMatch = true,
-                Overwrite = false,
-                PreserveFolderStructure = false,
-                ReturnListOfObjectKeys = false,
-                DeleteSource = false,
-            };
             _connection = new Connection
             {
                 AuthenticationMethod = AuthenticationMethod.PreSignedURL,
@@ -181,21 +178,25 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = null,
                 BucketName = null,
                 Region = default,
+                UploadFromCurrentDirectoryOnly = true,
+                ThrowErrorIfNoMatch = true,
+                Overwrite = false,
+                PreserveFolderStructure = false,
+                ReturnListOfObjectKeys = false,
+                DeleteSource = false,
             };
 
-            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.UploadObject(_connection, _input, _options, default)).Result;
+            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.UploadObject(_connection, _input, default)).Result;
             Assert.IsTrue(ex.Message.Contains("Source path not found."));
         }
-        #endregion PreSignedNoPath
 
-        #region PreSignedDeleteSourceFileMask
         /// <summary>
         /// Presigned URL can be used just once and for 1 file so only 1 file will be uploaded and deleted.
         /// Also testing FileMask.
         /// Test asserts that file has been uploaded (result ok) and file doesn't exists in source directory but you can comment CleanUp() and check it out manually.
         /// </summary>
         [TestMethod]
-        public void PreSignedDeleteSourceFileMask()
+        public void PreSignedDeleteSourceFileMaskTest()
         {
             var fileName = "deletethis_presign.txt";
             var setS3Key = $"2022/PreSigned/{fileName}"; //Location where file will be uploaded. test1.txt should be deleted from source directory.
@@ -207,15 +208,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 UseACL = false,
                 S3Directory = null,
             };
-            _options = new Options
-            {
-                DeleteSource = true,
-                UploadFromCurrentDirectoryOnly = false,
-                ThrowErrorIfNoMatch = false,
-                Overwrite = false,
-                PreserveFolderStructure = false,
-                ReturnListOfObjectKeys = false,
-            };
             _connection = new Connection
             {
                 AuthenticationMethod = AuthenticationMethod.PreSignedURL,
@@ -224,18 +216,22 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = null,
                 BucketName = null,
                 Region = default,
+                DeleteSource = true,
+                UploadFromCurrentDirectoryOnly = false,
+                ThrowErrorIfNoMatch = false,
+                Overwrite = false,
+                PreserveFolderStructure = false,
+                ReturnListOfObjectKeys = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
             Assert.IsTrue(!File.Exists($@"{_dir}\AWS\{fileName}"));
         }
-        #endregion PreSignedDeleteSourceFileMask
         #endregion PreSigned
 
         #region AWS Creds
 
-        #region TestAWSCredsUpload
         /// <summary>
         /// AWS creds testing.
         /// All files from FilePath will be uploaded.
@@ -259,9 +255,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 UploadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 PreserveFolderStructure = false,
@@ -270,17 +263,15 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
         }
-        #endregion TestAWSCredsUpload
 
-        #region TestAWSCredsMissing
         /// <summary>
         /// AWS creds missing. Ends up to exception before checking files etcc.
         /// </summary>
         [TestMethod]
-        public void AWSCredsMissing()
+        public void AWSCredsMissingTest()
         {
             _input = new Input
             {
@@ -298,9 +289,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 UploadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 PreserveFolderStructure = false,
@@ -309,17 +297,15 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.UploadObject(_connection, _input, _options, default)).Result;
+            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.UploadObject(_connection, _input, default)).Result;
             Assert.IsTrue(ex.Message.Contains("AWS Access Key Id and Secret Access Key required."));
         }
-        #endregion TestAWSCredsMissing
 
-        #region AWSCredsUploadFromCurrentDirectoryOnly
         /// <summary>
         /// AWS creds testing with UploadFromCurrentDirectoryOnly = true. S3 locations shouldn't contain subfile.txt.
         /// </summary>
         [TestMethod]
-        public void AWSCredsUploadFromCurrentDirectoryOnly()
+        public void AWSCredsUploadFromCurrentDirectoryOnlyTest()
         {
             _input = new Input
             {
@@ -337,9 +323,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 UploadFromCurrentDirectoryOnly = true,
                 Overwrite = false,
                 PreserveFolderStructure = false,
@@ -348,17 +331,15 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
         }
-        #endregion AWSCredsUploadFromCurrentDirectoryOnly
 
-        #region AWSCredsOverwrite
         /// <summary>
         /// AWS creds testing with Overwrite = true. Run this test 2 times so 2nd time will be overwrite.
         /// </summary>
         [TestMethod]
-        public void AWSCredsOverwrite()
+        public void AWSCredsOverwriteTest()
         {
             _input = new Input
             {
@@ -376,9 +357,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 Overwrite = true,
                 UploadFromCurrentDirectoryOnly = false,
                 PreserveFolderStructure = false,
@@ -387,17 +365,15 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
         }
-        #endregion AWSCredsOverwrite
 
-        #region AWSCredsPreserveFolderStructure
         /// <summary>
         /// AWS creds testing with PreserveFolderStructure = true. 
         /// </summary>
         [TestMethod]
-        public void AWSCredsPreserveFolderStructure()
+        public void AWSCredsPreserveFolderStructureTest()
         {
             _input = new Input
             {
@@ -415,9 +391,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 PreserveFolderStructure = true,
                 Overwrite = false,
                 UploadFromCurrentDirectoryOnly = false,
@@ -426,17 +399,15 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
         }
-        #endregion AWSCredsPreserveFolderStructure
 
-        #region AWSCredsReturnListOfObjectKeys
         /// <summary>
         /// AWS creds testing with PreserveFolderStructure = true. Check result.
         /// </summary>
         [TestMethod]
-        public void AWSCredsReturnListOfObjectKeys()
+        public void AWSCredsReturnListOfObjectKeysTest()
         {
             _input = new Input
             {
@@ -454,9 +425,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 ReturnListOfObjectKeys = true,
                 PreserveFolderStructure = false,
                 Overwrite = true,
@@ -465,19 +433,17 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
         }
-        #endregion AWSCredsReturnListOfObjectKeys
 
-        #region AWSCredsDeleteSourceFileMask
         /// <summary>
         /// AWS creds testing with DeleteSource = true + FileMask.
         /// Also testing FileMask.
         /// Test asserts that file has been uploaded (result ok) and file doesn't exists in source directory but you can comment CleanUp() and check it out manually.
         /// </summary>
         [TestMethod]
-        public void AWSCredsDeleteSourceFileMask()
+        public void AWSCredsDeleteSourceFileMaskTest()
         {
             var fileName = "deletethis_awscreds.txt";
             _input = new Input
@@ -496,9 +462,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 DeleteSource = true,
                 ReturnListOfObjectKeys = false,
                 PreserveFolderStructure = false,
@@ -507,18 +470,16 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
             Assert.IsTrue(!File.Exists($@"{_dir}\AWS\{fileName}"));
         }
-        #endregion AWSCredsDeleteSourceFileMask
 
-        #region AWSCredsThrowErrorIfNoMatch
         /// <summary>
         /// AWS creds testing with AWSCredsThrowErrorIfNoMatch = true.
         /// </summary>
         [TestMethod]
-        public void AWSCredsThrowErrorIfNoMatch()
+        public void AWSCredsThrowErrorIfNoMatchTest()
         {
             _input = new Input
             {
@@ -536,9 +497,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 ThrowErrorIfNoMatch = true,
                 DeleteSource = false,
                 ReturnListOfObjectKeys = false,
@@ -547,18 +505,16 @@ namespace Frends.AmazonS3.UploadObject.Test
                 UploadFromCurrentDirectoryOnly = false,
             };
 
-            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.UploadObject(_connection, _input, _options, default)).Result;
+            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.UploadObject(_connection, _input, default)).Result;
             Assert.IsTrue(ex.Message.Contains("No files match the filemask within supplied path."));
         }
-        #endregion AWSCredsThrowErrorIfNoMatch
 
-        #region AWSCredsACLPrivate
         /// <summary>
         /// AWS creds testing.
         /// ACL Private.
         /// </summary>
         [TestMethod]
-        public void AWSCredsACLPrivate()
+        public void AWSCredsACLPrivateTest()
         {
             _input = new Input
             {
@@ -576,9 +532,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 UploadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 PreserveFolderStructure = false,
@@ -587,18 +540,16 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
         }
-        #endregion AWSCredsACLPrivate
 
-        #region AWSCredsACLPublicRead
         /// <summary>
         /// AWS creds testing.
         /// ACL PublicRead.
         /// </summary>
         [TestMethod]
-        public void AWSCredsACLPublicRead()
+        public void AWSCredsACLPublicReadTest()
         {
             _input = new Input
             {
@@ -616,9 +567,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 UploadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 PreserveFolderStructure = false,
@@ -627,18 +575,16 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
         }
-        #endregion AWSCredsACLPublicRead
 
-        #region AWSCredsACLPublicReadWrited
         /// <summary>
         /// AWS creds testing.
         /// ACL PublicReadWrite.
         /// </summary>
         [TestMethod]
-        public void AWSCredsACLPublicReadWrited()
+        public void AWSCredsACLPublicReadWritedTest()
         {
             _input = new Input
             {
@@ -656,9 +602,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 UploadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 PreserveFolderStructure = false,
@@ -667,18 +610,16 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
         }
-        #endregion AWSCredsACLPublicReadWrited
 
-        #region AWSCredsACLAuthenticatedRead
         /// <summary>
         /// AWS creds testing.
         /// ACL AuthenticatedRead.
         /// </summary>
         [TestMethod]
-        public void AWSCredsACLAuthenticatedRead()
+        public void AWSCredsACLAuthenticatedReadTest()
         {
             _input = new Input
             {
@@ -696,9 +637,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 UploadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 PreserveFolderStructure = false,
@@ -707,18 +645,16 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
         }
-        #endregion AWSCredsACLAuthenticatedRead
 
-        #region AWSCredsACLBucketOwnerRead
         /// <summary>
         /// AWS creds testing.
         /// ACL BucketOwnerRead.
         /// </summary>
         [TestMethod]
-        public void AWSCredsACLBucketOwnerRead()
+        public void AWSCredsACLBucketOwnerReadTest()
         {
             _input = new Input
             {
@@ -736,9 +672,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 UploadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 PreserveFolderStructure = false,
@@ -747,18 +680,16 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
         }
-        #endregion AWSCredsACLBucketOwnerRead
 
-        #region AWSCredsACLBucketOwnerFullControl
         /// <summary>
         /// AWS creds testing.
         /// ACL BucketOwnerFullControl.
         /// </summary>
         [TestMethod]
-        public void AWSCredsACLBucketOwnerFullControl()
+        public void AWSCredsACLBucketOwnerFullControlTest()
         {
             _input = new Input
             {
@@ -776,9 +707,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 UploadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 PreserveFolderStructure = false,
@@ -787,18 +715,16 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
         }
-        #endregion AWSCredsACLBucketOwnerFullControl
 
-        #region AWSCredsACLLogDeliveryWrite
         /// <summary>
         /// AWS creds testing.
         /// ACL LogDeliveryWrite.
         /// </summary>
         [TestMethod]
-        public void AWSCredsACLLogDeliveryWrite()
+        public void AWSCredsACLLogDeliveryWriteTest()
         {
             _input = new Input
             {
@@ -816,9 +742,6 @@ namespace Frends.AmazonS3.UploadObject.Test
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-            _options = new Options
-            {
                 UploadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 PreserveFolderStructure = false,
@@ -827,32 +750,12 @@ namespace Frends.AmazonS3.UploadObject.Test
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.UploadObject(_connection, _input, _options, default);
+            var result = AmazonS3.UploadObject(_connection, _input, default);
             Assert.IsNotNull(result.Result.Results);
         }
-        #endregion AWSCredsACLLogDeliveryWrite
 
         #endregion AWS Creds
 
-        #region HelperMethods
-
-        /// <summary>
-        /// Create test files and folders.
-        /// </summary>
-        [TestInitialize]
-        public void Initialize()
-        {
-            CreateTestFiles();
-        }
-
-        /// <summary>
-        /// Delete test files and folders.
-        /// </summary>
-        [TestCleanup]
-        public void CleanUp()
-        {
-            DeleteSourcePath();
-        }
 
         /// <summary>
         /// Create pre-signed URL
@@ -892,25 +795,12 @@ namespace Frends.AmazonS3.UploadObject.Test
         }
 
         /// <summary>
-        /// Delete files from main folder to cause exeption in PreSignedNoFileInTopDirectoryTest().
-        /// </summary>
-        private void DeleteMainDirectoryFiles()
-        {
-            File.Delete($@"{_dir}\AWS\test1.txt");
-            File.Delete($@"{_dir}\AWS\deletethis_presign.txt");
-            File.Delete($@"{_dir}\AWS\deletethis_awscreds.txt");
-            File.Delete($@"{_dir}\AWS\overwrite_presign.txt");
-            File.Delete($@"{_dir}\AWS\overwrite_awscreds.txt");
-        }
-
-        /// <summary>
         /// Delete test files and folders.
         /// </summary>
         private void DeleteSourcePath()
         {
             Directory.Delete($@"{_dir}\AWS", true);
         }
-        #endregion HelperMethods
 
     }
 }

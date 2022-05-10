@@ -1,13 +1,11 @@
-﻿
-namespace Frends.AmazonS3.UploadObject.Definitions
+﻿namespace Frends.AmazonS3.UploadObject.Definitions
 {
     /// <summary>
     /// AWS regions.
     /// </summary>
     public enum Region
     {
-        #region regions
-        #pragma warning disable CS1591 // AWS region(s). No need for specific XML.
+#pragma warning disable CS1591 // AWS region(s). No need for specific XML.
         AfSouth1,
         ApEast1,
         ApNortheast1,
@@ -31,8 +29,7 @@ namespace Frends.AmazonS3.UploadObject.Definitions
         UsEast2,
         UsWest1,
         UsWest2
-        #pragma warning restore CS1591
-        #endregion regions
+#pragma warning restore CS1591
     }
 
     /// <summary>
@@ -40,7 +37,6 @@ namespace Frends.AmazonS3.UploadObject.Definitions
     /// </summary>
     public enum AuthenticationMethod
     {
-        #region AuthMethods
         /// <summary>
         /// AwsAccessKeyId+AwsSecretAccessKey.
         /// </summary>
@@ -50,7 +46,6 @@ namespace Frends.AmazonS3.UploadObject.Definitions
         /// Pre-signed URL.
         /// </summary>
         PreSignedURL
-        #endregion AuthMethods
     }
 
     /// <summary>
@@ -58,7 +53,6 @@ namespace Frends.AmazonS3.UploadObject.Definitions
     /// </summary>
     public enum ACLs
     {
-        #region ACLs
         /// <summary>
         /// Owner gets FULL_CONTROL. No one else has access rights (default).
         /// </summary>
@@ -93,24 +87,5 @@ namespace Frends.AmazonS3.UploadObject.Definitions
         /// The LogDelivery group gets WRITE and READ_ACP permissions on the bucket. For more information about logs, see (Logging requests using server access logging).
         /// </summary>
         LogDeliveryWrite
-        #endregion ACLs
-    }
-
-    /// <summary>
-    /// Filter options by authentication method.
-    /// </summary>
-    public enum OptionsFor
-    {
-        #region OptionsFor
-        /// <summary>
-        /// AwsAccessKeyId+AwsSecretAccessKey.
-        /// </summary>
-        AWSCredentials,
-
-        /// <summary>
-        /// Pre-signed URL.
-        /// </summary>
-        PreSignedURL
-        #endregion OptionsFor
     }
 }
