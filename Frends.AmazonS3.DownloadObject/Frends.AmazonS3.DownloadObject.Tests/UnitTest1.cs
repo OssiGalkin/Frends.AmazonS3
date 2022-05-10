@@ -1,5 +1,4 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Frends.AmazonS3.DownloadObject.Definitions;
 using System;
 using System.IO;
 using System.Linq;

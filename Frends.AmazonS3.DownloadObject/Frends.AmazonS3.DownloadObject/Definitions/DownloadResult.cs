@@ -1,4 +1,4 @@
-﻿namespace Frends.AmazonS3.DownloadObject.Definitions
+﻿namespace Frends.AmazonS3.DownloadObject
 {
     /// <summary>
     /// Download result.

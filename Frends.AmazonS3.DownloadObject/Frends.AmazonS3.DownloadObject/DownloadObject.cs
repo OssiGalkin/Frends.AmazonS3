@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Threading;
-using Frends.AmazonS3.DownloadObject.Definitions;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.S3;
