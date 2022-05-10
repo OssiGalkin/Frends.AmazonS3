@@ -1,12 +1,11 @@
 ﻿
-namespace Frends.AmazonS3.DownloadObject
+namespace Frends.AmazonS3.DownloadObject.Definitions
 {
     /// <summary>
     /// AWS regions.
     /// </summary>
     public enum Region
     {
-        #region regions
 #pragma warning disable CS1591 // AWS regions. No need for specific XML.
         AfSouth1,
         ApEast1,
@@ -32,7 +31,6 @@ namespace Frends.AmazonS3.DownloadObject
         UsWest1,
         UsWest2
 #pragma warning restore CS1591
-        #endregion regions
     }
 
     /// <summary>
@@ -40,7 +38,6 @@ namespace Frends.AmazonS3.DownloadObject
     /// </summary>
     public enum AuthenticationMethod
     {
-        #region AuthMethods
         /// <summary>
         /// AwsAccessKeyId+AwsSecretAccessKey.
         /// </summary>
@@ -50,24 +47,5 @@ namespace Frends.AmazonS3.DownloadObject
         /// Pre-signed URL.
         /// </summary>
         PreSignedURL
-        #endregion AuthMethods
-    }
-
-    /// <summary>
-    /// Filter options by authentication method.
-    /// </summary>
-    public enum OptionsFor
-    {
-        #region OptionsFor
-        /// <summary>
-        /// AwsAccessKeyId+AwsSecretAccessKey.
-        /// </summary>
-        AWSCredentials,
-
-        /// <summary>
-        /// Pre-signed URL.
-        /// </summary>
-        PreSignedURL
-        #endregion OptionsFor
     }
 }

@@ -1,5 +1,5 @@
 # Frends.AmazonS3.DownloadObject
-Frends tasks for download objects from an Amazon S3.
+Frends tasks for downloading objects from an Amazon S3.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) 
 [![Build](https://github.com/FrendsPlatform/Frends.AmazonS3/actions/workflows/DownloadObject_build_and_test_on_main.yml/badge.svg)](https://github.com/FrendsPlatform/Frends.AmazonS3/actions)

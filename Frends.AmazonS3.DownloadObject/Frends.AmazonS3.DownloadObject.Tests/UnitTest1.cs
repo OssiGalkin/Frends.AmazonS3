@@ -5,6 +5,7 @@ using System.Linq;
 using Amazon.S3;
 using Amazon;
 using Amazon.S3.Model;
+using Frends.AmazonS3.DownloadObject.Definitions;
 
 namespace Frends.AmazonS3.DownloadObject.Tests
 {
@@ -16,9 +17,7 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         private readonly string? _bucketName = Environment.GetEnvironmentVariable("HiQ_AWSS3Test_BucketName");
         private readonly string _dir = Path.Combine(Environment.CurrentDirectory); // .\Frends.AmazonS3.DownloadObject\Frends.AmazonS3.DownloadObject.Test\bin\Debug\net6.0\
 
-        Connection? _connection;
         Input? _input;
-        Options? _options;
 
 
         /// <summary>
@@ -31,6 +30,15 @@ namespace Frends.AmazonS3.DownloadObject.Tests
             CreateTestFiles();
         }
 
+        /// <summary>
+        /// Delete test files and folders. CleanUp after each test to make sure overwriten file(s) won't make other tests fail.
+        /// </summary>
+        [TestCleanup]
+        public void CleanUp()
+        {
+            Directory.Delete($@"{_dir}\Download", true);
+        }
+
         #region pre-signed URL
         /// <summary>
         /// Download with pre-signed URL.
@@ -41,21 +49,15 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         {
             var setS3Key = $"2022/Testfile.txt"; //S3 key.
 
-            _connection = new Connection()
-            {
-                AuthenticationMethod = AuthenticationMethod.PreSignedURL,
-                PreSignedURL = CreatePreSignedURL(setS3Key)
-            };
-
             _input = new Input()
             {
+                AuthenticationMethod = AuthenticationMethod.PreSignedURL,
+                PreSignedURL = CreatePreSignedURL(setS3Key),
                 DestinationPath = @$"{_dir}\Download",
                 FileName = "Testfile.txt",
             };
 
-            _options = new Options() { };
-
-            var result = AmazonS3.DownloadObject(_connection, _input, _options, default);
+            var result = AmazonS3.DownloadObject(_input, default);
             Assert.IsNotNull(result.Result.Results);
             Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
             Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
@@ -69,21 +71,15 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         {
             var setS3Key = $"2022/Testfile.txt"; //S3 key.
 
-            _connection = new Connection()
-            {
-                AuthenticationMethod = AuthenticationMethod.PreSignedURL,
-                PreSignedURL = ""
-            };
-
             _input = new Input()
             {
+                AuthenticationMethod = AuthenticationMethod.PreSignedURL,
+                PreSignedURL = "",
                 DestinationPath = @$"{_dir}\Download",
                 FileName = "Testfile.txt",
             };
 
-            _options = new Options() { };
-
-            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_connection, _input, _options, default)).Result;
+            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
             Assert.IsTrue(ex.Message.Contains("AWS pre-signed URL required."));
         }
 
@@ -95,21 +91,15 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         {
             var setS3Key = $"2022/Testfile.txt"; //S3 key.
 
-            _connection = new Connection()
-            {
-                AuthenticationMethod = AuthenticationMethod.PreSignedURL,
-                PreSignedURL = CreatePreSignedURL(setS3Key)
-            };
-
             _input = new Input()
             {
+                AuthenticationMethod = AuthenticationMethod.PreSignedURL,
+                PreSignedURL = CreatePreSignedURL(setS3Key),
                 DestinationPath = "",
                 FileName = "Testfile.txt",
             };
 
-            _options = new Options() { };
-
-            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_connection, _input, _options, default)).Result;
+            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
             Assert.IsTrue(ex.Message.Contains("Destination required."));
         }
 
@@ -121,25 +111,17 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         {
             var setS3Key = $"2022/Overwrite.txt"; //S3 key.
 
-            _connection = new Connection()
-            {
-                AuthenticationMethod = AuthenticationMethod.PreSignedURL,
-                PreSignedURL = CreatePreSignedURL(setS3Key)
-            };
-
             _input = new Input()
             {
+                AuthenticationMethod = AuthenticationMethod.PreSignedURL,
+                PreSignedURL = CreatePreSignedURL(setS3Key),
                 DestinationPath = @$"{_dir}\Download",
                 FileName = "Overwrite.txt",
-            };
-
-            _options = new Options()
-            {
                 Overwrite = false,
                 ContinueIfExists = false,
             };
 
-            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_connection, _input, _options, default)).Result;
+            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
             Assert.IsTrue(ex.Message.Contains("File already exists at"));
         }
 
@@ -151,25 +133,17 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         {
             var setS3Key = $"2022/Overwrite.txt"; //S3 key.
 
-            _connection = new Connection()
-            {
-                AuthenticationMethod = AuthenticationMethod.PreSignedURL,
-                PreSignedURL = CreatePreSignedURL(setS3Key)
-            };
-
             _input = new Input()
             {
+                AuthenticationMethod = AuthenticationMethod.PreSignedURL,
+                PreSignedURL = CreatePreSignedURL(setS3Key),
                 DestinationPath = @$"{_dir}\Download",
                 FileName = "Overwrite.txt",
-            };
-
-            _options = new Options()
-            {
                 Overwrite = true,
                 ContinueIfExists = false,
             };
 
-            var result = AmazonS3.DownloadObject(_connection, _input, _options, default);
+            var result = AmazonS3.DownloadObject(_input, default);
             Assert.IsNotNull(result.Result.Results);
             Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
             Assert.IsTrue(CompareFiles());
@@ -182,35 +156,27 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         /// AWS creds get all keys.
         /// </summary>
         [TestMethod]
-        public void AWSCredsTestAllKeys()
+        public void AWSCredsAllKeysTest()
         {
             Directory.Delete($@"{_dir}\Download", true);
 
-            _connection = new Connection()
+            _input = new Input()
             {
                 AuthenticationMethod = AuthenticationMethod.AWSCredentials,
                 AwsAccessKeyId = _accessKey,
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-
-            _input = new Input()
-            {
                 DestinationPath = @$"{_dir}\Download",
                 S3Directory = "2022/",
-                SearchPattern = "*"
-            };
-
-            _options = new Options()
-            {
+                SearchPattern = "*",
                 DeleteSourceFile = false,
                 DownloadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.DownloadObject(_connection, _input, _options, default);
+            var result = AmazonS3.DownloadObject(_input, default);
             Assert.IsNotNull(result.Result.Results);
             Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
             Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
@@ -223,31 +189,23 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         [TestMethod]
         public void AWSCredsMissingTest()
         {
-            _connection = new Connection()
+            _input = new Input()
             {
                 AuthenticationMethod = AuthenticationMethod.AWSCredentials,
                 AwsAccessKeyId = "",
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-
-            _input = new Input()
-            {
                 DestinationPath = @$"{_dir}\Download",
                 S3Directory = "2022/",
-                SearchPattern = "*"
-            };
-
-            _options = new Options()
-            {
+                SearchPattern = "*",
                 DeleteSourceFile = false,
                 DownloadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 ThrowErrorIfNoMatch = false,
             };
 
-            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_connection, _input, _options, default)).Result;
+            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
             Assert.IsTrue(ex.Message.Contains("AWS Access Key Id and Secret Access Key required."));
         }
 
@@ -257,31 +215,23 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         [TestMethod]
         public void AWSCredsSearchPatternTest()
         {
-            _connection = new Connection()
+            _input = new Input()
             {
                 AuthenticationMethod = AuthenticationMethod.AWSCredentials,
                 AwsAccessKeyId = _accessKey,
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-
-            _input = new Input()
-            {
                 DestinationPath = @$"{_dir}\Download",
                 S3Directory = "2022/",
-                SearchPattern = "Test*.txt"
-            };
-
-            _options = new Options()
-            {
+                SearchPattern = "Test*.txt",
                 ThrowErrorIfNoMatch = true,
                 DeleteSourceFile = false,
                 DownloadFromCurrentDirectoryOnly = false,
                 Overwrite = true,
             };
 
-            var result = AmazonS3.DownloadObject(_connection, _input, _options, default);
+            var result = AmazonS3.DownloadObject(_input, default);
             Assert.IsNotNull(result.Result.Results);
             Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         }
@@ -292,31 +242,23 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         [TestMethod]
         public void AWSCredsThrowErrorIfNoMatchTest()
         {
-            _connection = new Connection()
+            _input = new Input()
             {
                 AuthenticationMethod = AuthenticationMethod.AWSCredentials,
                 AwsAccessKeyId = _accessKey,
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-
-            _input = new Input()
-            {
                 DestinationPath = @$"{_dir}\Download",
                 S3Directory = "2022/",
-                SearchPattern = "NoFile*"
-            };
-
-            _options = new Options()
-            {
+                SearchPattern = "NoFile*",
                 ThrowErrorIfNoMatch = true,
                 DeleteSourceFile = false,
                 DownloadFromCurrentDirectoryOnly = false,
                 Overwrite = true,
             };
 
-            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_connection, _input, _options, default)).Result;
+            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
             Assert.IsTrue(ex.Message.Contains("No matches found with search pattern"));
         }
 
@@ -326,31 +268,23 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         [TestMethod]
         public void AWSCredsDestinationMissingTest()
         {
-            _connection = new Connection()
+            _input = new Input()
             {
                 AuthenticationMethod = AuthenticationMethod.AWSCredentials,
                 AwsAccessKeyId = _accessKey,
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-
-            _input = new Input()
-            {
                 DestinationPath = "",
                 S3Directory = "2022/",
-                SearchPattern = "*"
-            };
-
-            _options = new Options()
-            {
+                SearchPattern = "*",
                 DeleteSourceFile = false,
                 DownloadFromCurrentDirectoryOnly = false,
                 Overwrite = false,
                 ThrowErrorIfNoMatch = false,
             };
 
-            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_connection, _input, _options, default)).Result;
+            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
             Assert.IsTrue(ex.Message.Contains("Destination required."));
         }
 
@@ -363,24 +297,16 @@ namespace Frends.AmazonS3.DownloadObject.Tests
             Directory.CreateDirectory($@"{_dir}\Download");
             File.AppendAllText($@"{_dir}\Download\Testfile.txt", $"Test {DateTime.UtcNow}");
 
-            _connection = new Connection()
+            _input = new Input()
             {
                 AuthenticationMethod = AuthenticationMethod.AWSCredentials,
                 AwsAccessKeyId = _accessKey,
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-
-            _input = new Input()
-            {
                 DestinationPath = @$"{_dir}\Download",
                 S3Directory = "2022/",
-                SearchPattern = "*"
-            };
-
-            _options = new Options()
-            {
+                SearchPattern = "*",
                 Overwrite = false,
                 DeleteSourceFile = false,
                 DownloadFromCurrentDirectoryOnly = false,
@@ -388,8 +314,8 @@ namespace Frends.AmazonS3.DownloadObject.Tests
                 ContinueIfExists = false,
             };
 
-            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_connection, _input, _options, default)).Result;
-            Assert.IsTrue(ex.Message.Contains("Set Overwrite to true from options to overwrite the file or ContinueIfExists to true to jump to next file in queue"));
+            var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
+            Assert.IsTrue(ex.Message.Contains("Consider using Overwrite or ContinueIfExists options"));
         }
 
         /// <summary>
@@ -398,24 +324,16 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         [TestMethod]
         public void AWSCredsContinueIfExistsTest()
         {
-            _connection = new Connection()
+            _input = new Input()
             {
                 AuthenticationMethod = AuthenticationMethod.AWSCredentials,
                 AwsAccessKeyId = _accessKey,
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-
-            _input = new Input()
-            {
                 DestinationPath = @$"{_dir}\Download",
                 S3Directory = "2022/",
-                SearchPattern = "*"
-            };
-
-            _options = new Options()
-            {
+                SearchPattern = "*",
                 ContinueIfExists = true,
                 Overwrite = false,
                 DeleteSourceFile = false,
@@ -423,8 +341,8 @@ namespace Frends.AmazonS3.DownloadObject.Tests
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.DownloadObject(_connection, _input, _options, default);
-            Assert.IsNotNull(result.Result.Results.Any(x => x.DownloadedObject.Contains("File Overwrite.txt was skipped because it already exists at ")));
+            var result = AmazonS3.DownloadObject(_input, default);
+            Assert.IsNotNull(result.Result.Results.Any(x => x.ObjectData.Contains("File Overwrite.txt was skipped because it already exists at ")));
             Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
             Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
         }
@@ -435,31 +353,23 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         [TestMethod]
         public void AWSCredsDownloadFromCurrentDirectoryOnlyTest()
         {
-            _connection = new Connection()
+            _input = new Input()
             {
                 AuthenticationMethod = AuthenticationMethod.AWSCredentials,
                 AwsAccessKeyId = _accessKey,
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-
-            _input = new Input()
-            {
                 DestinationPath = @$"{_dir}\Download",
                 S3Directory = "2022/",
-                SearchPattern = "*"
-            };
-
-            _options = new Options()
-            {
+                SearchPattern = "*",
                 DownloadFromCurrentDirectoryOnly = true,
                 Overwrite = true,
                 DeleteSourceFile = false,
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.DownloadObject(_connection, _input, _options, default);
+            var result = AmazonS3.DownloadObject(_input, default);
             Assert.IsNotNull(result.Result.Results);
             Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
             Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
@@ -469,40 +379,33 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         /// <summary>
         /// Delete source files.
         /// </summary>
+        /*
         [TestMethod]
         public void AWSCredsDeleteSourceFileTest()
         {
-            _connection = new Connection()
+            _input = new Input()
             {
                 AuthenticationMethod = AuthenticationMethod.AWSCredentials,
                 AwsAccessKeyId = _accessKey,
                 AwsSecretAccessKey = _secretAccessKey,
                 BucketName = _bucketName,
                 Region = Region.EuCentral1,
-            };
-
-            _input = new Input()
-            {
                 DestinationPath = @$"{_dir}\Download",
                 S3Directory = "2022/",
-                SearchPattern = "*"
-            };
-
-            _options = new Options()
-            {
+                SearchPattern = "*",
                 DeleteSourceFile = true,
                 DownloadFromCurrentDirectoryOnly = true,
                 Overwrite = true,
                 ThrowErrorIfNoMatch = false,
             };
 
-            var result = AmazonS3.DownloadObject(_connection, _input, _options, default);
+            var result = AmazonS3.DownloadObject(_input, default);
             Assert.IsNotNull(result.Result.Results);
             Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
             Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
             Assert.IsFalse(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
         }
-
+        */
         #endregion aws creds
 
 
@@ -524,7 +427,6 @@ namespace Frends.AmazonS3.DownloadObject.Tests
             return url;
         }
 
-
         private void CreateTestFiles()
         {
             Directory.CreateDirectory($@"{_dir}\Download");
@@ -538,17 +440,7 @@ namespace Frends.AmazonS3.DownloadObject.Tests
         private bool CompareFiles()
         {
             string mainFile = File.ReadAllText($@"{_dir}\Download\Overwrite.txt");
-            return mainFile.Contains("Overwrite complete") && !mainFile.Contains("To Be Overwriten") ? true : false;
-        }
-
-        /// <summary>
-        /// Delete test files and folders.
-        /// </summary>
-        [TestCleanup]
-        public void CleanUp()
-        {
-            Directory.Delete($@"{_dir}\Download", true);
+            return mainFile.Contains("Overwrite complete") && !mainFile.Contains("To Be Overwriten");
         }
     }
-
 }
