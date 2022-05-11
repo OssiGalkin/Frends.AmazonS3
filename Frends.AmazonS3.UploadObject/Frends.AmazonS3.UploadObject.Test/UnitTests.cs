@@ -49,7 +49,7 @@ public class UnitTests
     [TestMethod]
     public void PreSignedUploadTest()
     {
-        var setS3Key = $"2022/PreSigned/UploadTest.txt"; //S3 "location".
+        var setS3Key = $"Upload2022/PreSigned/UploadTest.txt"; //S3 "location".
         _input = new Input
         {
             FilePath = $@"{_dir}\AWS",
@@ -125,7 +125,7 @@ public class UnitTests
         File.Delete($@"{_dir}\AWS\overwrite_presign.txt");
         File.Delete($@"{_dir}\AWS\overwrite_awscreds.txt");
 
-        var setS3Key = $"2022/PreSigned/PreSignedNoFileInTopDirectoryTest.txt"; //Location where file will be uploaded.
+        var setS3Key = $"Upload2022/PreSigned/PreSignedNoFileInTopDirectoryTest.txt"; //Location where file will be uploaded.
 
         _input = new Input
         {
@@ -161,7 +161,7 @@ public class UnitTests
     [TestMethod]
     public void PreSignedNoPathTest()
     {
-        var setS3Key = $"2022/PreSigned/PreSignedNoPath.txt"; //Location where file will be uploaded. This file should not exists in S3.
+        var setS3Key = $"Upload2022/PreSigned/PreSignedNoPath.txt"; //Location where file will be uploaded. This file should not exists in S3.
         _input = new Input
         {
             FilePath = "c:/nofileshere/",
@@ -199,7 +199,7 @@ public class UnitTests
     public void PreSignedDeleteSourceFileMaskTest()
     {
         var fileName = "deletethis_presign.txt";
-        var setS3Key = $"2022/PreSigned/{fileName}"; //Location where file will be uploaded. test1.txt should be deleted from source directory.
+        var setS3Key = $"Upload2022/PreSigned/{fileName}"; //Location where file will be uploaded. test1.txt should be deleted from source directory.
         _input = new Input
         {
             FilePath = $@"{_dir}\AWS",
@@ -245,7 +245,7 @@ public class UnitTests
             ACL = default,
             FileMask = null,
             UseACL = false,
-            S3Directory = "2022/AWSCreds/UploadTest/",
+            S3Directory = "Upload2022/AWSCreds/UploadTest/",
         };
         _connection = new Connection
         {
@@ -279,7 +279,7 @@ public class UnitTests
             ACL = default,
             FileMask = null,
             UseACL = false,
-            S3Directory = "2022/AWSCreds/ThisShouldntExistsInS3_AWSCredsMissing/",
+            S3Directory = "Upload2022/AWSCreds/ThisShouldntExistsInS3_AWSCredsMissing/",
         };
         _connection = new Connection
         {
@@ -313,7 +313,7 @@ public class UnitTests
             ACL = default,
             FileMask = null,
             UseACL = false,
-            S3Directory = "2022/AWSCreds/AWSCredsUploadFromCurrentDirectoryOnly/",
+            S3Directory = "Upload2022/AWSCreds/AWSCredsUploadFromCurrentDirectoryOnly/",
         };
         _connection = new Connection
         {
@@ -347,7 +347,7 @@ public class UnitTests
             ACL = default,
             FileMask = null,
             UseACL = false,
-            S3Directory = "2022/AWSCreds/Overwrite/",
+            S3Directory = "Upload2022/AWSCreds/Overwrite/",
         };
         _connection = new Connection
         {
@@ -381,7 +381,7 @@ public class UnitTests
             ACL = default,
             FileMask = null,
             UseACL = false,
-            S3Directory = "2022/AWSCreds/PreserveFolderStructure/",
+            S3Directory = "Upload2022/AWSCreds/PreserveFolderStructure/",
         };
         _connection = new Connection
         {
@@ -415,7 +415,7 @@ public class UnitTests
             ACL = default,
             FileMask = null,
             UseACL = false,
-            S3Directory = "2022/AWSCreds/AWSCredsReturnListOfObjectKeys/",
+            S3Directory = "Upload2022/AWSCreds/AWSCredsReturnListOfObjectKeys/",
         };
         _connection = new Connection
         {
@@ -452,7 +452,7 @@ public class UnitTests
             ACL = default,
             FileMask = fileName,
             UseACL = false,
-            S3Directory = "2022/AWSCreds/DeleteSource/",
+            S3Directory = "Upload2022/AWSCreds/DeleteSource/",
         };
         _connection = new Connection
         {
@@ -487,7 +487,7 @@ public class UnitTests
             ACL = default,
             FileMask = "notafile*",
             UseACL = false,
-            S3Directory = "2022/AWSCreds/ThisShouldntExistsInS3_AWSCredsThrowErrorIfNoMatch/",
+            S3Directory = "Upload2022/AWSCreds/ThisShouldntExistsInS3_AWSCredsThrowErrorIfNoMatch/",
         };
         _connection = new Connection
         {
@@ -522,7 +522,7 @@ public class UnitTests
             ACL = ACLs.Private,
             FileMask = null,
             UseACL = true,
-            S3Directory = "2022/AWSCreds/ACLPrivate/",
+            S3Directory = "Upload2022/AWSCreds/ACLPrivate/",
         };
         _connection = new Connection
         {
@@ -557,7 +557,7 @@ public class UnitTests
             ACL = ACLs.PublicRead,
             FileMask = null,
             UseACL = true,
-            S3Directory = "2022/AWSCreds/ACLPublicRead/",
+            S3Directory = "Upload2022/AWSCreds/ACLPublicRead/",
         };
         _connection = new Connection
         {
@@ -592,7 +592,7 @@ public class UnitTests
             ACL = ACLs.PublicReadWrite,
             FileMask = null,
             UseACL = true,
-            S3Directory = "2022/AWSCreds/ACLPublicReadWrite/",
+            S3Directory = "Upload2022/AWSCreds/ACLPublicReadWrite/",
         };
         _connection = new Connection
         {
@@ -627,7 +627,7 @@ public class UnitTests
             ACL = ACLs.AuthenticatedRead,
             FileMask = null,
             UseACL = true,
-            S3Directory = "2022/AWSCreds/ACLAuthenticatedRead/",
+            S3Directory = "Upload2022/AWSCreds/ACLAuthenticatedRead/",
         };
         _connection = new Connection
         {
@@ -662,7 +662,7 @@ public class UnitTests
             ACL = ACLs.BucketOwnerRead,
             FileMask = null,
             UseACL = true,
-            S3Directory = "2022/AWSCreds/ACLBucketOwnerRead/",
+            S3Directory = "Upload2022/AWSCreds/ACLBucketOwnerRead/",
         };
         _connection = new Connection
         {
@@ -697,7 +697,7 @@ public class UnitTests
             ACL = ACLs.BucketOwnerFullControl,
             FileMask = null,
             UseACL = true,
-            S3Directory = "2022/AWSCreds/ACLBucketOwnerFullControl/",
+            S3Directory = "Upload2022/AWSCreds/ACLBucketOwnerFullControl/",
         };
         _connection = new Connection
         {
@@ -732,7 +732,7 @@ public class UnitTests
             ACL = ACLs.LogDeliveryWrite,
             FileMask = null,
             UseACL = true,
-            S3Directory = "2022/AWSCreds/ACLLogDeliveryWrite/",
+            S3Directory = "Upload2022/AWSCreds/ACLLogDeliveryWrite/",
         };
         _connection = new Connection
         {
