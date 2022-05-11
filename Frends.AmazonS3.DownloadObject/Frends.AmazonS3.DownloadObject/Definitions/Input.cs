@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace Frends.AmazonS3.DownloadObject;
+namespace Frends.AmazonS3.DownloadObject.Definitions;
 
 /// <summary>
 /// Connection and destination parameters.

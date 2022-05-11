@@ -1,5 +1,5 @@
 ﻿
-namespace Frends.AmazonS3.DownloadObject;
+namespace Frends.AmazonS3.DownloadObject.Definitions;
 
 /// <summary>
 /// AWS regions.

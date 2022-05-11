@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Frends.AmazonS3.DownloadObject;
+namespace Frends.AmazonS3.DownloadObject.Definitions;
 
 /// <summary>
 /// Result.

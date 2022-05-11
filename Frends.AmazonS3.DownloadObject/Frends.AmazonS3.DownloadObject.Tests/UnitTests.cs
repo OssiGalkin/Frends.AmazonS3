@@ -5,6 +5,7 @@ using System.Linq;
 using Amazon.S3;
 using Amazon;
 using Amazon.S3.Model;
+using Frends.AmazonS3.DownloadObject.Definitions;
 
 namespace Frends.AmazonS3.DownloadObject.Tests;
 

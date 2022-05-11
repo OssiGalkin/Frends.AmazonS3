@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Linq;
+using Frends.AmazonS3.DownloadObject.Definitions;
 
 namespace Frends.AmazonS3.DownloadObject;
 
