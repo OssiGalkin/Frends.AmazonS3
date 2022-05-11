@@ -86,7 +86,7 @@ public class AmazonS3
                         {
                             results.Add(new SingleResultObject(await WriteToFile(input, fileObject, client, input.DestinationPath, fullPath)));
                         
-                            if (input.DeleteSourceFile) await DeleteSourceFile(client, cancellationToken, input.BucketName, fileObject.Key);
+                            if (input.DeleteSourceFile) await DeleteSourceFile(client, input.BucketName, fileObject.Key, cancellationToken);
                         }
                     }
                 }
@@ -153,7 +153,7 @@ public class AmazonS3
         }
     }
 
-    private static async Task<string> DeleteSourceFile(AmazonS3Client client, CancellationToken cancellationToken, string bucketName, string key)
+    private static async Task<string> DeleteSourceFile(AmazonS3Client client, string bucketName, string key, CancellationToken cancellationToken)
     {
         try
         {
