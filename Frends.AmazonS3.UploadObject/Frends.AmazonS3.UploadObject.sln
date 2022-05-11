@@ -12,7 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		UploadObject_build_and_test_on_main.yml = UploadObject_build_and_test_on_main.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Frends.AmazonS3.UploadObject.Test", "Frends.AmazonS3.UploadObject.Test\Frends.AmazonS3.UploadObject.Test.csproj", "{C2A1E867-FC58-4432-A4B7-5E1FC451C9EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Frends.AmazonS3.UploadObject.Tests", "Frends.AmazonS3.UploadObject.Test\Frends.AmazonS3.UploadObject.Tests.csproj", "{C2A1E867-FC58-4432-A4B7-5E1FC451C9EB}"
 	ProjectSection(ProjectDependencies) = postProject
 		{35C305C0-8108-4A98-BB1D-AFE5C926239E} = {35C305C0-8108-4A98-BB1D-AFE5C926239E}
 	EndProjectSection
