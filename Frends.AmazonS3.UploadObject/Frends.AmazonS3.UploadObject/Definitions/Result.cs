@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Frends.AmazonS3.UploadObject;
+namespace Frends.AmazonS3.UploadObject.Definitions;
 
 /// <summary>
 /// Result.

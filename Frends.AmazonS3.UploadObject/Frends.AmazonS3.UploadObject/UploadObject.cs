@@ -8,6 +8,7 @@ using Amazon.S3.Model;
 using System.IO;
 using System.Collections.Generic;
 using System.Net.Http;
+using Frends.AmazonS3.UploadObject.Definitions;
 
 namespace Frends.AmazonS3.UploadObject;
 

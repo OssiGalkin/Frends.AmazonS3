@@ -4,6 +4,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon;
 using System.IO;
+using Frends.AmazonS3.UploadObject.Definitions;
 
 namespace Frends.AmazonS3.UploadObject.Tests;
 

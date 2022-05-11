@@ -1,4 +1,4 @@
-﻿namespace Frends.AmazonS3.UploadObject;
+﻿namespace Frends.AmazonS3.UploadObject.Definitions;
 
 /// <summary>
 /// AWS regions.

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace Frends.AmazonS3.UploadObject;
+namespace Frends.AmazonS3.UploadObject.Definitions;
 
 /// <summary>
 /// Connection parameters.
