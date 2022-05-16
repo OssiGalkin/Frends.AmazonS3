@@ -35,7 +35,7 @@ public class AmazonS3
             case AuthenticationMethod.AWSCredentials:
                 if (string.IsNullOrWhiteSpace(input.AwsAccessKeyId) || string.IsNullOrWhiteSpace(input.AwsSecretAccessKey) || string.IsNullOrWhiteSpace(input.BucketName) || string.IsNullOrWhiteSpace(input.BucketName))
                     throw new Exception("AWS Access Key Id and Secret Access Key required.");
-                var resultAWS = await DownloadUtility(input, cancellationToken, false);
+                var resultAWS = await DownloadUtility(input, false, cancellationToken);
                 return new Result(resultAWS);
 
             case AuthenticationMethod.PreSignedURL:
@@ -43,14 +43,14 @@ public class AmazonS3
                     throw new Exception("AWS pre-signed URL required.");
                 if (string.IsNullOrWhiteSpace(input.FileName))
                     throw new Exception("Filename required.");
-                var resultsPre = await DownloadUtility(input, cancellationToken, true);
+                var resultsPre = await DownloadUtility(input, true, cancellationToken);
                 return new Result(resultsPre);
         }
         return null;
     }
 
 
-    private static async Task<List<SingleResultObject>> DownloadUtility(Input input, CancellationToken cancellationToken, bool preSigned)
+    private static async Task<List<SingleResultObject>> DownloadUtility(Input input, bool preSigned, CancellationToken cancellationToken)
     {
         var results = new List<SingleResultObject>();
 
