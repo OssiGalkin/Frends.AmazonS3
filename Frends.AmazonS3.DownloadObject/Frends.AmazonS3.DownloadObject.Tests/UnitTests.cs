@@ -6,6 +6,9 @@ using Amazon.S3;
 using Amazon;
 using Amazon.S3.Model;
 using Frends.AmazonS3.DownloadObject.Definitions;
+using Xunit.Sdk;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Frends.AmazonS3.DownloadObject.Tests;
 
@@ -21,13 +24,12 @@ public class UnitTests
 
 
     /// <summary>
-    /// Create test files and folders. 
-    /// !!! Manually upload test files to S3 "2022/"-folder. You can copy files from ".\Frends.AmazonS3.DownloadObject\Frends.AmazonS3.DownloadObject.Test\bin\Debug\net6.0\DownloadTestFiles" after first test run. !!!
+    /// Create test files and folders before uploading them to S3.
     /// </summary>
     [TestInitialize]
-    public void Initialize()
+    public async Task Initialize()
     {
-        CreateTestFiles();
+        await CreateTestFiles();
     }
 
     /// <summary>
@@ -46,7 +48,7 @@ public class UnitTests
     [TestMethod]
     public void PreSignedURLTest()
     {
-        var setS3Key = $"2022/Testfile.txt"; //S3 key.
+        var setS3Key = $"DownloadTest/Testfile.txt"; //S3 key.
 
         _input = new Input()
         {
@@ -68,7 +70,7 @@ public class UnitTests
     [TestMethod]
     public void PreSignedURLMissingURLTest()
     {
-        var setS3Key = $"2022/Testfile.txt"; //S3 key.
+        var setS3Key = $"DownloadTest/Testfile.txt"; //S3 key.
 
         _input = new Input()
         {
@@ -88,7 +90,7 @@ public class UnitTests
     [TestMethod]
     public void PreSignedMissingDestinationPathTest()
     {
-        var setS3Key = $"2022/Testfile.txt"; //S3 key.
+        var setS3Key = $"DownloadTest/Testfile.txt"; //S3 key.
 
         _input = new Input()
         {
@@ -108,7 +110,7 @@ public class UnitTests
     [TestMethod]
     public void PreSignedNoOverwriteContinueIfExistsTest()
     {
-        var setS3Key = $"2022/Overwrite.txt"; //S3 key.
+        var setS3Key = $"DownloadTest/Overwrite.txt"; //S3 key.
 
         _input = new Input()
         {
@@ -128,9 +130,9 @@ public class UnitTests
     /// Result is not null, file exists and was overwriten (compare lines).
     /// </summary>
     [TestMethod]
-    public void PreSignedURLOverwriteTest()
+    public async Task PreSignedURLOverwriteTest()
     {
-        var setS3Key = $"2022/Overwrite.txt"; //S3 key.
+        var setS3Key = $"DownloadTest/Overwrite.txt"; //S3 key.
 
         _input = new Input()
         {
@@ -142,8 +144,8 @@ public class UnitTests
             ContinueIfExists = false,
         };
 
-        var result = AmazonS3.DownloadObject(_input, default);
-        Assert.IsNotNull(result.Result.Results);
+        var result = await AmazonS3.DownloadObject(_input, default);
+        Assert.IsNotNull(result.Results);
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsTrue(CompareFiles());
     }
@@ -152,7 +154,7 @@ public class UnitTests
     /// AWS creds get all keys.
     /// </summary>
     [TestMethod]
-    public void AWSCredsAllKeysTest()
+    public async Task AWSCredsAllKeysTest()
     {
         Directory.Delete($@"{_dir}\Download", true);
 
@@ -164,7 +166,7 @@ public class UnitTests
             BucketName = _bucketName,
             Region = Region.EuCentral1,
             DestinationPath = @$"{_dir}\Download",
-            S3Directory = "2022/",
+            S3Directory = "DownloadTest/",
             SearchPattern = "*",
             DeleteSourceFile = false,
             DownloadFromCurrentDirectoryOnly = false,
@@ -172,8 +174,8 @@ public class UnitTests
             ThrowErrorIfNoMatch = false,
         };
 
-        var result = AmazonS3.DownloadObject(_input, default);
-        Assert.IsNotNull(result.Result.Results);
+        var result = await AmazonS3.DownloadObject(_input, default);
+        Assert.IsNotNull(result.Results);
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
@@ -193,7 +195,7 @@ public class UnitTests
             BucketName = _bucketName,
             Region = Region.EuCentral1,
             DestinationPath = @$"{_dir}\Download",
-            S3Directory = "2022/",
+            S3Directory = "DownloadTest/",
             SearchPattern = "*",
             DeleteSourceFile = false,
             DownloadFromCurrentDirectoryOnly = false,
@@ -219,7 +221,7 @@ public class UnitTests
             BucketName = _bucketName,
             Region = Region.EuCentral1,
             DestinationPath = @$"{_dir}\Download",
-            S3Directory = "2022/",
+            S3Directory = "DownloadTest/",
             SearchPattern = "Test*.txt",
             ThrowErrorIfNoMatch = true,
             DeleteSourceFile = false,
@@ -246,7 +248,7 @@ public class UnitTests
             BucketName = _bucketName,
             Region = Region.EuCentral1,
             DestinationPath = @$"{_dir}\Download",
-            S3Directory = "2022/",
+            S3Directory = "DownloadTest/",
             SearchPattern = "NoFile*",
             ThrowErrorIfNoMatch = true,
             DeleteSourceFile = false,
@@ -272,7 +274,7 @@ public class UnitTests
             BucketName = _bucketName,
             Region = Region.EuCentral1,
             DestinationPath = "",
-            S3Directory = "2022/",
+            S3Directory = "DownloadTest/",
             SearchPattern = "*",
             DeleteSourceFile = false,
             DownloadFromCurrentDirectoryOnly = false,
@@ -301,7 +303,7 @@ public class UnitTests
             BucketName = _bucketName,
             Region = Region.EuCentral1,
             DestinationPath = @$"{_dir}\Download",
-            S3Directory = "2022/",
+            S3Directory = "DownloadTest/",
             SearchPattern = "*",
             Overwrite = false,
             DeleteSourceFile = false,
@@ -328,7 +330,7 @@ public class UnitTests
             BucketName = _bucketName,
             Region = Region.EuCentral1,
             DestinationPath = @$"{_dir}\Download",
-            S3Directory = "2022/",
+            S3Directory = "DownloadTest/",
             SearchPattern = "*",
             ContinueIfExists = true,
             Overwrite = false,
@@ -357,7 +359,7 @@ public class UnitTests
             BucketName = _bucketName,
             Region = Region.EuCentral1,
             DestinationPath = @$"{_dir}\Download",
-            S3Directory = "2022/",
+            S3Directory = "DownloadTest/",
             SearchPattern = "*",
             DownloadFromCurrentDirectoryOnly = true,
             Overwrite = true,
@@ -386,7 +388,7 @@ public class UnitTests
             BucketName = _bucketName,
             Region = Region.EuCentral1,
             DestinationPath = @$"{_dir}\Download",
-            S3Directory = "2022/",
+            S3Directory = "DownloadTest/",
             SearchPattern = "*",
             DeleteSourceFile = true,
             DownloadFromCurrentDirectoryOnly = true,
@@ -422,14 +424,40 @@ public class UnitTests
     /// <summary>
     /// Create testfiles after each tests to make sure correct files and texts exists.
     /// </summary>
-    private void CreateTestFiles()
+    private async Task<bool> CreateTestFiles()
     {
+        var file1 = $@"{_dir}\Download\Overwrite.txt";
+        var file2 = $@"{_dir}\DownloadTestFiles\Overwrite.txt";
+        var file3 = $@"{_dir}\DownloadTestFiles\Testfile.txt";
+        var file4 = $@"{_dir}\DownloadTestFiles\DownloadFromCurrentDirectoryOnly\DownloadFromCurrentDirectoryOnly.txt";
+
+        var files = new List<string>{file1,file2,file3,file4};
+
         Directory.CreateDirectory($@"{_dir}\Download");
         Directory.CreateDirectory($@"{_dir}\DownloadTestFiles\DownloadFromCurrentDirectoryOnly");
-        File.AppendAllText($@"{_dir}\Download\Overwrite.txt", "To Be Overwriten");
-        File.AppendAllText($@"{_dir}\DownloadTestFiles\Overwrite.txt", $"Overwrite complete {DateTime.UtcNow}");
-        File.AppendAllText($@"{_dir}\DownloadTestFiles\Testfile.txt", $"Test {DateTime.UtcNow}");
-        File.AppendAllText($@"{_dir}\DownloadTestFiles\DownloadFromCurrentDirectoryOnly\DownloadFromCurrentDirectoryOnly.txt", $"This should exists if DownloadFromCurrentDirectoryOnly = true.  {DateTime.UtcNow}");
+        File.AppendAllText(file1, "To Be Overwriten");
+        File.AppendAllText(file2, $"Overwrite complete {DateTime.UtcNow}");
+        File.AppendAllText(file3, $"Test {DateTime.UtcNow}");
+        File.AppendAllText(file4, $"This should exists if DownloadFromCurrentDirectoryOnly = true.  {DateTime.UtcNow}");
+
+        return await UploadFileToS3(files);
+    }
+
+    private async Task<bool> UploadFileToS3(List<string> files)
+    {
+        var client = new AmazonS3Client(_accessKey, _secretAccessKey, RegionEndpoint.EUCentral1);
+
+        foreach (var x in files)
+        {
+            var putObjectRequest = new PutObjectRequest
+            {
+                BucketName = _bucketName,
+                Key = x.Contains("DownloadFromCurrentDirectoryOnly") ? "DownloadTest/DownloadFromCurrentDirectoryOnly/DownloadFromCurrentDirectoryOnly.txt" : $"DownloadTest/{Path.GetFileName(x)}",
+                FilePath = x,
+            };
+            await client.PutObjectAsync(putObjectRequest);
+        }
+        return true;
     }
 
     /// <summary>
