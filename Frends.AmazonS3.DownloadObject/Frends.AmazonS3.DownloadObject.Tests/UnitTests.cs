@@ -375,10 +375,10 @@ public class UnitTests
     }
 
     /// <summary>
-    /// Delete sourcefiles after download. DeleteSourceFile = true.
+    /// Delete sourcefiles after download. DeleteSourceFile = true, DownloadFromCurrentDirectoryOnly = true.
     /// </summary>
     [TestMethod]
-    public void AWSCredsDeleteSourceFileTest()
+    public void AWSCredsDeleteSourceFileCurrentDirOnlyTest()
     {
         _input = new Input()
         {
@@ -401,6 +401,35 @@ public class UnitTests
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsFalse(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
+    }
+
+    /// <summary>
+    /// Delete sourcefiles after download. DeleteSourceFile = true, DownloadFromCurrentDirectoryOnly = false.
+    /// </summary>
+    [TestMethod]
+    public void AWSCredsDeleteSourceFileTest()
+    {
+        _input = new Input()
+        {
+            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
+            AwsAccessKeyId = _accessKey,
+            AwsSecretAccessKey = _secretAccessKey,
+            BucketName = _bucketName,
+            Region = Region.EuCentral1,
+            DestinationPath = @$"{_dir}\Download",
+            S3Directory = "DownloadTest/",
+            SearchPattern = "*",
+            DeleteSourceFile = true,
+            DownloadFromCurrentDirectoryOnly = false,
+            Overwrite = true,
+            ThrowErrorIfNoMatch = false,
+        };
+
+        var result = AmazonS3.DownloadObject(_input, default);
+        Assert.IsNotNull(result.Result.Results);
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
     }
 
     /// <summary>

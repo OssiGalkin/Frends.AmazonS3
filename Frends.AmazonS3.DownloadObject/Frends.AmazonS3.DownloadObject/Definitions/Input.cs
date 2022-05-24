@@ -99,10 +99,11 @@ public class Input
     public bool DownloadFromCurrentDirectoryOnly { get; set; }
 
     /// <summary>
-    /// Delete S3 source files after download. Enabled when using AWSCredentials and DownloadFromCurrentDirectoryOnly is true.
+    /// Delete S3 source files after download. Subfolders will also be deleted if they are part of the file's key and there are no files left. Create subfolders manually to make sure they won't be deleted. 
+    /// Enabled when using AWSCredentials.
     /// </summary>
     /// <example>false</example>
-    [UIHint(nameof(DownloadFromCurrentDirectoryOnly), "", true)]
+    [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
     public bool DeleteSourceFile { get; set; }
 
     /// <summary>
