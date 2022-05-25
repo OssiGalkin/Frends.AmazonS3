@@ -6,7 +6,7 @@ namespace Frends.AmazonS3.DownloadObject.Definitions;
 /// <summary>
 /// Connection parameters.
 /// </summary>
-public class Connection
+public class Input
 {
     /// <summary>
     /// Authentication method to use when connecting to AWS S3 bucket. Options are pre-signed URL or AWS Access Key ID+AWS Secret Access Key.
@@ -96,4 +96,18 @@ public class Connection
     /// <example>false</example>
     [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
     public bool ThrowErrorIfNoMatch { get; set; }
+
+    /// <summary>
+    /// Actions if destination file already exists.
+    /// </summary>
+    /// <example>Info</example>
+    [DefaultValue(DestinationFileExistsAction.Info)]
+    public DestinationFileExistsAction DestinationFileExistsAction { get; set; }
+
+    /// <summary>
+    /// Destination directory where to create folders and files.
+    /// </summary>
+    /// <example>c:\temp, \\network\folder</example>
+    [DisplayFormat(DataFormatString = "Text")]
+    public string DestinationDirectory { get; set; }
 }

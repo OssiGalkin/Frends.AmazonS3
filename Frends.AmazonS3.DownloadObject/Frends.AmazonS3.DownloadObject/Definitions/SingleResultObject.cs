@@ -11,8 +11,22 @@ public class SingleResultObject
     /// <example>Download complete: {fullPath}.</example>
     public string ObjectData { get; private set; }
 
-    internal SingleResultObject(string objectData)
+    /// <summary>
+    /// Object's name.
+    /// </summary>
+    /// <example>Filename.txt</example>
+    public string ObjectName { get; private set; }
+
+    /// <summary>
+    /// Destination folder.
+    /// </summary>
+    /// <example>c:\temp, \\network\folder</example>
+    public string DestinationDirectory { get; private set; }
+
+    internal SingleResultObject(string objectData, string objectName, string destinationDirectory)
     {
         ObjectData = objectData;
+        ObjectName = objectName;
+        DestinationDirectory = destinationDirectory;
     }
 }
