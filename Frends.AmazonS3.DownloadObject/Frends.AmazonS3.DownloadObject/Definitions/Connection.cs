@@ -4,9 +4,9 @@ using System.ComponentModel.DataAnnotations;
 namespace Frends.AmazonS3.DownloadObject.Definitions;
 
 /// <summary>
-/// Connection and destination parameters.
+/// Connection parameters.
 /// </summary>
-public class Input
+public class Connection
 {
     /// <summary>
     /// Authentication method to use when connecting to AWS S3 bucket. Options are pre-signed URL or AWS Access Key ID+AWS Secret Access Key.
@@ -58,7 +58,6 @@ public class Input
     public Region Region { get; set; }
     #endregion AWSCredentials
 
-    #region Options
     /// <summary>
     /// Downloads all objects with this prefix. Enabled when using AWSCredentials.
     /// </summary>
@@ -68,7 +67,7 @@ public class Input
     public string S3Directory { get; set; }
 
     /// <summary>
-    /// String pattern to search files. Enabled when using AWSCredentials.
+    /// String pattern to search objects. Enabled when using AWSCredentials.
     /// </summary>
     /// <example>*.*, *file?.txt</example>
     [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
@@ -77,34 +76,19 @@ public class Input
     public string SearchPattern { get; set; }
 
     /// <summary>
-    /// Directory where to create folders and files.
-    /// </summary>
-    /// <example>c:\temp, \\network\folder</example>
-    [DisplayFormat(DataFormatString = "Text")]
-    public string DestinationPath { get; set; }
-
-    /// <summary>
-    /// Set filename (to destination). Enabled when using PreSignedURL.
-    /// </summary>
-    /// <example>File.txt</example>
-    [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.PreSignedURL)]
-    [DisplayFormat(DataFormatString = "Text")]
-    public string FileName { get; set; }
-
-    /// <summary>
-    /// Set to true to download files from current directory only. Enabled when using AWSCredentials.
+    /// Set to true to download objects from current directory only. Enabled when using AWSCredentials.
     /// </summary>
     /// <example>false</example>
     [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
     public bool DownloadFromCurrentDirectoryOnly { get; set; }
 
     /// <summary>
-    /// Delete S3 source files after download. Subfolders will also be deleted if they are part of the file's key and there are no files left. Create subfolders manually to make sure they won't be deleted. 
+    /// Delete S3 source object after download. Subfolders will also be deleted if they are part of the object's key and there are no objects left. Create subfolders manually to make sure they won't be deleted. 
     /// Enabled when using AWSCredentials.
     /// </summary>
     /// <example>false</example>
     [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
-    public bool DeleteSourceFile { get; set; }
+    public bool DeleteSourceObject { get; set; }
 
     /// <summary>
     /// Throw an error if there are no objects in the path matching the search pattern. Enabled when using AWSCredentials.
@@ -112,19 +96,4 @@ public class Input
     /// <example>false</example>
     [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
     public bool ThrowErrorIfNoMatch { get; set; }
-
-    /// <summary>
-    /// If the file already exists in destination, add an error message to result and continue downloading next file in queue.
-    /// </summary>
-    /// <example>false</example>
-    [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
-    public bool ContinueIfExists { get; set; }
-
-    /// <summary>
-    /// Set to true to overwrite objects with the same path and name (object key).
-    /// </summary>
-    /// <example>false</example>
-    public bool Overwrite { get; set; }
-
-    #endregion Options
 }

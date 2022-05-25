@@ -48,3 +48,24 @@ public enum AuthenticationMethod
     /// </summary>
     PreSignedURL
 }
+
+/// <summary>
+/// Handle existing file.
+/// </summary>
+public enum DestinationFileExistsAction
+{
+    /// <summary>
+    /// Overwrite file.
+    /// </summary>
+    Overwrite,
+
+    /// <summary>
+    /// Skip this file and add notification to return.
+    /// </summary>
+    Info,
+
+    /// <summary>
+    /// Stop the process.
+    /// </summary>
+    Error
+}

@@ -20,7 +20,8 @@ public class UnitTests
     private readonly string? _bucketName = Environment.GetEnvironmentVariable("HiQ_AWSS3Test_BucketName");
     private readonly string _dir = Path.Combine(Environment.CurrentDirectory); // .\Frends.AmazonS3.DownloadObject\Frends.AmazonS3.DownloadObject.Test\bin\Debug\net6.0\
 
-    Input? _input;
+    Connection? connection;
+    Destination? destination;
 
 
     /// <summary>
@@ -42,394 +43,619 @@ public class UnitTests
     }
 
     /// <summary>
-    /// Download with pre-signed URL.
-    /// Result is not null and file Testfile.txt existed before CleanUp().
+    /// Testfile.txt existed without overwrite before CleanUp().
     /// </summary>
     [TestMethod]
-    public void PreSignedURLTest()
+    public void PreSignedURL_Overwrite_NewFile_Test()
     {
-        var setS3Key = $"DownloadTest/Testfile.txt"; //S3 key.
+        var setS3Key = $"DownloadTest/Testfile.txt";
 
-        _input = new Input()
+        connection = new Connection()
         {
             AuthenticationMethod = AuthenticationMethod.PreSignedURL,
             PreSignedURL = CreatePreSignedURL(setS3Key),
-            DestinationPath = @$"{_dir}\Download",
-            FileName = "Testfile.txt",
         };
 
-        var result = AmazonS3.DownloadObject(_input, default);
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "Testfile.txt",
+            DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
+        };
+
+        var result = AmazonS3.DownloadObject(connection, destination, default);
         Assert.IsNotNull(result.Result.Results);
+        Assert.IsFalse(result.Result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
     }
 
     /// <summary>
-    /// Missing pre-signed URL.
+    /// Get filename from PreSignedURL.
+    /// Testfile.txt existed without overwrite before CleanUp().
     /// </summary>
     [TestMethod]
-    public void PreSignedURLMissingURLTest()
+    public void PreSignedURL_Overwrite_NoDestinationFilename_Test()
     {
-        var setS3Key = $"DownloadTest/Testfile.txt"; //S3 key.
+        var setS3Key = $"DownloadTest/Testfile.txt";
 
-        _input = new Input()
-        {
-            AuthenticationMethod = AuthenticationMethod.PreSignedURL,
-            PreSignedURL = "",
-            DestinationPath = @$"{_dir}\Download",
-            FileName = "Testfile.txt",
-        };
-
-        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
-        Assert.IsTrue(ex.Message.Contains("AWS pre-signed URL required."));
-    }
-
-    /// <summary>
-    /// Missing destination path.
-    /// </summary>
-    [TestMethod]
-    public void PreSignedMissingDestinationPathTest()
-    {
-        var setS3Key = $"DownloadTest/Testfile.txt"; //S3 key.
-
-        _input = new Input()
+        connection = new Connection()
         {
             AuthenticationMethod = AuthenticationMethod.PreSignedURL,
             PreSignedURL = CreatePreSignedURL(setS3Key),
-            DestinationPath = "",
-            FileName = "Testfile.txt",
         };
 
-        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
-        Assert.IsTrue(ex.Message.Contains("Destination required."));
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "",
+            DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
+        };
+
+        var result = AmazonS3.DownloadObject(connection, destination, default);
+        Assert.IsNotNull(result.Result.Results);
+        Assert.IsFalse(result.Result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
     }
 
     /// <summary>
-    /// File already exists in destination. Overwrite and ContinueIfExists = false.
+    /// Result informs about overwrite and Overwrite.txt was overwriten.
     /// </summary>
     [TestMethod]
-    public void PreSignedNoOverwriteContinueIfExistsTest()
+    public void PreSignedURL_Overwrite_Exists_Test()
     {
-        var setS3Key = $"DownloadTest/Overwrite.txt"; //S3 key.
+        var setS3Key = $"DownloadTest/Overwrite.txt";
 
-        _input = new Input()
+        connection = new Connection()
         {
             AuthenticationMethod = AuthenticationMethod.PreSignedURL,
             PreSignedURL = CreatePreSignedURL(setS3Key),
-            DestinationPath = @$"{_dir}\Download",
-            FileName = "Overwrite.txt",
-            Overwrite = false,
-            ContinueIfExists = false,
         };
 
-        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
-        Assert.IsTrue(ex.Message.Contains("File already exists at"));
-    }
-
-    /// <summary>
-    /// Result is not null, file exists and was overwriten (compare lines).
-    /// </summary>
-    [TestMethod]
-    public async Task PreSignedURLOverwriteTest()
-    {
-        var setS3Key = $"DownloadTest/Overwrite.txt"; //S3 key.
-
-        _input = new Input()
+        destination = new Destination()
         {
-            AuthenticationMethod = AuthenticationMethod.PreSignedURL,
-            PreSignedURL = CreatePreSignedURL(setS3Key),
-            DestinationPath = @$"{_dir}\Download",
-            FileName = "Overwrite.txt",
-            Overwrite = true,
-            ContinueIfExists = false,
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "Overwrite.txt",
+            DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
         };
 
-        var result = await AmazonS3.DownloadObject(_input, default);
-        Assert.IsNotNull(result.Results);
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
+        var result = AmazonS3.DownloadObject(connection, destination, default);
+        Assert.IsTrue(result.Result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
         Assert.IsTrue(CompareFiles());
     }
 
     /// <summary>
-    /// AWS creds get all keys.
+    /// Download complete without info.
     /// </summary>
     [TestMethod]
-    public async Task AWSCredsAllKeysTest()
+    public void PreSignedURL_Info_NewFile_Test()
     {
-        Directory.Delete($@"{_dir}\Download", true);
+        var setS3Key = $"DownloadTest/Testfile.txt";
 
-        _input = new Input()
+        connection = new Connection()
         {
-            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
-            AwsAccessKeyId = _accessKey,
-            AwsSecretAccessKey = _secretAccessKey,
-            BucketName = _bucketName,
-            Region = Region.EuCentral1,
-            DestinationPath = @$"{_dir}\Download",
-            S3Directory = "DownloadTest/",
-            SearchPattern = "*",
-            DeleteSourceFile = false,
-            DownloadFromCurrentDirectoryOnly = false,
-            Overwrite = false,
-            ThrowErrorIfNoMatch = false,
+            AuthenticationMethod = AuthenticationMethod.PreSignedURL,
+            PreSignedURL = CreatePreSignedURL(setS3Key),
         };
 
-        var result = await AmazonS3.DownloadObject(_input, default);
-        Assert.IsNotNull(result.Results);
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
-    }
-
-    /// <summary>
-    /// Missing AWS creds.
-    /// </summary>
-    [TestMethod]
-    public void AWSCredsMissingTest()
-    {
-        _input = new Input()
+        destination = new Destination()
         {
-            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
-            AwsAccessKeyId = "",
-            AwsSecretAccessKey = _secretAccessKey,
-            BucketName = _bucketName,
-            Region = Region.EuCentral1,
-            DestinationPath = @$"{_dir}\Download",
-            S3Directory = "DownloadTest/",
-            SearchPattern = "*",
-            DeleteSourceFile = false,
-            DownloadFromCurrentDirectoryOnly = false,
-            Overwrite = false,
-            ThrowErrorIfNoMatch = false,
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "Testfile.txt",
+            DestinationFileExistsAction = DestinationFileExistsAction.Info
         };
 
-        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
-        Assert.IsTrue(ex.Message.Contains("AWS Access Key Id and Secret Access Key required."));
-    }
-
-    /// <summary>
-    /// ThrowErrorIfNoMatch = true.
-    /// </summary>
-    [TestMethod]
-    public void AWSCredsSearchPatternTest()
-    {
-        _input = new Input()
-        {
-            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
-            AwsAccessKeyId = _accessKey,
-            AwsSecretAccessKey = _secretAccessKey,
-            BucketName = _bucketName,
-            Region = Region.EuCentral1,
-            DestinationPath = @$"{_dir}\Download",
-            S3Directory = "DownloadTest/",
-            SearchPattern = "Test*.txt",
-            ThrowErrorIfNoMatch = true,
-            DeleteSourceFile = false,
-            DownloadFromCurrentDirectoryOnly = false,
-            Overwrite = true,
-        };
-
-        var result = AmazonS3.DownloadObject(_input, default);
+        var result = AmazonS3.DownloadObject(connection, destination, default);
         Assert.IsNotNull(result.Result.Results);
+        Assert.IsFalse(result.Result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
     }
 
     /// <summary>
-    /// ThrowErrorIfNoMatch = true.
+    /// Inform about existing file and skip downloading.
     /// </summary>
     [TestMethod]
-    public void AWSCredsThrowErrorIfNoMatchTest()
+    public void PreSignedURL_Info_Exists_Test()
     {
-        _input = new Input()
+        var setS3Key = $"DownloadTest/Overwrite.txt";
+
+        connection = new Connection()
         {
-            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
-            AwsAccessKeyId = _accessKey,
-            AwsSecretAccessKey = _secretAccessKey,
-            BucketName = _bucketName,
-            Region = Region.EuCentral1,
-            DestinationPath = @$"{_dir}\Download",
-            S3Directory = "DownloadTest/",
-            SearchPattern = "NoFile*",
-            ThrowErrorIfNoMatch = true,
-            DeleteSourceFile = false,
-            DownloadFromCurrentDirectoryOnly = false,
-            Overwrite = true,
+            AuthenticationMethod = AuthenticationMethod.PreSignedURL,
+            PreSignedURL = CreatePreSignedURL(setS3Key),
         };
 
-        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
-        Assert.IsTrue(ex.Message.Contains("No matches found with search pattern"));
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "Overwrite.txt",
+            DestinationFileExistsAction = DestinationFileExistsAction.Info
+        };
+
+        var result = AmazonS3.DownloadObject(connection, destination, default);
+        Assert.IsTrue(result.Result.Results.Any(x => x.ObjectData.Contains("already exists")));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
+        Assert.IsFalse(CompareFiles());
     }
 
     /// <summary>
-    /// Missing destination path.
+    /// Download complete without error.
     /// </summary>
     [TestMethod]
-    public void AWSCredsDestinationMissingTest()
+    public void PreSignedURL_Error_NewFile_Test()
     {
-        _input = new Input()
+        var setS3Key = $"DownloadTest/Testfile.txt";
+
+        connection = new Connection()
         {
-            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
-            AwsAccessKeyId = _accessKey,
-            AwsSecretAccessKey = _secretAccessKey,
-            BucketName = _bucketName,
-            Region = Region.EuCentral1,
-            DestinationPath = "",
-            S3Directory = "DownloadTest/",
-            SearchPattern = "*",
-            DeleteSourceFile = false,
-            DownloadFromCurrentDirectoryOnly = false,
-            Overwrite = false,
-            ThrowErrorIfNoMatch = false,
+            AuthenticationMethod = AuthenticationMethod.PreSignedURL,
+            PreSignedURL = CreatePreSignedURL(setS3Key),
         };
 
-        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "Testfile.txt",
+            DestinationFileExistsAction = DestinationFileExistsAction.Error
+        };
+
+        var result = AmazonS3.DownloadObject(connection, destination, default);
+        Assert.IsNotNull(result.Result.Results);
+        Assert.IsFalse(result.Result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
+    }
+
+    /// <summary>
+    /// Error while downloading.
+    /// </summary>
+    [TestMethod]
+    public void PreSignedURL_Error_Exists_Test()
+    {
+        var setS3Key = $"DownloadTest/Overwrite.txt";
+
+        connection = new Connection()
+        {
+            AuthenticationMethod = AuthenticationMethod.PreSignedURL,
+            PreSignedURL = CreatePreSignedURL(setS3Key),
+        };
+
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "Overwrite.txt",
+            DestinationFileExistsAction = DestinationFileExistsAction.Error
+        };
+
+        var result = AmazonS3.DownloadObject(connection, destination, default);
+        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, destination, default)).Result;
+        Assert.IsTrue(ex.Message.Contains("Error while downloading an object. File"));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
+        Assert.IsFalse(CompareFiles());
+    }
+
+
+    /// <summary>
+    /// Missing pre-signed URL error.
+    /// </summary>
+    [TestMethod]
+    public void PreSignedURL_MissingURL_Test()
+    {
+        var setS3Key = $"DownloadTest/Testfile.txt";
+
+        connection = new Connection()
+        {
+            AuthenticationMethod = AuthenticationMethod.PreSignedURL,
+            PreSignedURL = "",
+        };
+
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "Testfile.txt",
+            DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
+        };
+
+        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, destination, default)).Result;
+        Assert.IsTrue(ex.Message.Contains("AWS pre-signed URL required."));
+    }
+
+
+    /// <summary>
+    /// Missing destination path error.
+    /// </summary>
+    [TestMethod]
+    public void PreSignedURL_DestinationDirectory_Test()
+    {
+        var setS3Key = $"DownloadTest/Testfile.txt";
+
+        connection = new Connection()
+        {
+            AuthenticationMethod = AuthenticationMethod.PreSignedURL,
+            PreSignedURL = "",
+        };
+
+        destination = new Destination()
+        {
+            DestinationDirectory = "",
+            DestinationFilename = "Testfile.txt",
+            DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
+        };
+
+        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, destination, default)).Result;
         Assert.IsTrue(ex.Message.Contains("Destination required."));
     }
 
+
     /// <summary>
-    /// File already exists in destination. Overwrite and ContinueIfExists = false. Task ends up to an error.
+    /// AWS creds get all keys. No overwrite.
     /// </summary>
     [TestMethod]
-    public void AWSCredsNoOverwriteNoContinueIfExistsTest()
+    public async Task AWSCreds_Overwrite_NewFiles_Test()
     {
-        Directory.CreateDirectory($@"{_dir}\Download");
-        File.AppendAllText($@"{_dir}\Download\Testfile.txt", $"Test {DateTime.UtcNow}");
+        Directory.Delete($@"{_dir}\Download", true);
 
-        _input = new Input()
+        connection = new Connection()
         {
             AuthenticationMethod = AuthenticationMethod.AWSCredentials,
             AwsAccessKeyId = _accessKey,
             AwsSecretAccessKey = _secretAccessKey,
             BucketName = _bucketName,
             Region = Region.EuCentral1,
-            DestinationPath = @$"{_dir}\Download",
             S3Directory = "DownloadTest/",
             SearchPattern = "*",
-            Overwrite = false,
-            DeleteSourceFile = false,
+            DeleteSourceObject = false,
             DownloadFromCurrentDirectoryOnly = false,
             ThrowErrorIfNoMatch = false,
-            ContinueIfExists = false,
         };
 
-        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(_input, default)).Result;
-        Assert.IsTrue(ex.Message.Contains("Consider using Overwrite or ContinueIfExists options"));
-    }
-
-    /// <summary>
-    /// File already exists in destination. Overwrite = false and ContinueIfExists = true. Result will contain notification about the skipped file but continued downloading other files.
-    /// </summary>
-    [TestMethod]
-    public void AWSCredsContinueIfExistsTest()
-    {
-        _input = new Input()
+        destination = new Destination()
         {
-            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
-            AwsAccessKeyId = _accessKey,
-            AwsSecretAccessKey = _secretAccessKey,
-            BucketName = _bucketName,
-            Region = Region.EuCentral1,
-            DestinationPath = @$"{_dir}\Download",
-            S3Directory = "DownloadTest/",
-            SearchPattern = "*",
-            ContinueIfExists = true,
-            Overwrite = false,
-            DeleteSourceFile = false,
-            DownloadFromCurrentDirectoryOnly = false,
-            ThrowErrorIfNoMatch = false,
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "",
+            DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
         };
 
-        var result = AmazonS3.DownloadObject(_input, default);
-        Assert.IsNotNull(result.Result.Results.Any(x => x.ObjectData.Contains("File Overwrite.txt was skipped because it already exists at ")));
+
+        var result = await AmazonS3.DownloadObject(connection, destination, default);
+        Assert.IsNotNull(result.Results);
+        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
     }
 
+
     /// <summary>
-    /// Download only from S3 2022/ folder. DownloadFromCurrentDirectoryOnly.txt shouldn't exists.
+    /// AWS creds get all keys. Overwrite Overwrite.txt.
     /// </summary>
     [TestMethod]
-    public void AWSCredsDownloadFromCurrentDirectoryOnlyTest()
+    public async Task AWSCreds_Overwrite_WithOverwrite_Test()
     {
-        _input = new Input()
+        connection = new Connection()
         {
             AuthenticationMethod = AuthenticationMethod.AWSCredentials,
             AwsAccessKeyId = _accessKey,
             AwsSecretAccessKey = _secretAccessKey,
             BucketName = _bucketName,
             Region = Region.EuCentral1,
-            DestinationPath = @$"{_dir}\Download",
             S3Directory = "DownloadTest/",
             SearchPattern = "*",
-            DownloadFromCurrentDirectoryOnly = true,
-            Overwrite = true,
-            DeleteSourceFile = false,
-            ThrowErrorIfNoMatch = false,
-        };
-
-        var result = AmazonS3.DownloadObject(_input, default);
-        Assert.IsNotNull(result.Result.Results);
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
-        Assert.IsFalse(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
-    }
-
-    /// <summary>
-    /// Delete sourcefiles after download. DeleteSourceFile = true, DownloadFromCurrentDirectoryOnly = true.
-    /// </summary>
-    [TestMethod]
-    public void AWSCredsDeleteSourceFileCurrentDirOnlyTest()
-    {
-        _input = new Input()
-        {
-            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
-            AwsAccessKeyId = _accessKey,
-            AwsSecretAccessKey = _secretAccessKey,
-            BucketName = _bucketName,
-            Region = Region.EuCentral1,
-            DestinationPath = @$"{_dir}\Download",
-            S3Directory = "DownloadTest/",
-            SearchPattern = "*",
-            DeleteSourceFile = true,
-            DownloadFromCurrentDirectoryOnly = true,
-            Overwrite = true,
-            ThrowErrorIfNoMatch = false,
-        };
-
-        var result = AmazonS3.DownloadObject(_input, default);
-        Assert.IsNotNull(result.Result.Results);
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
-        Assert.IsFalse(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
-    }
-
-    /// <summary>
-    /// Delete sourcefiles after download. DeleteSourceFile = true, DownloadFromCurrentDirectoryOnly = false.
-    /// </summary>
-    [TestMethod]
-    public void AWSCredsDeleteSourceFileTest()
-    {
-        _input = new Input()
-        {
-            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
-            AwsAccessKeyId = _accessKey,
-            AwsSecretAccessKey = _secretAccessKey,
-            BucketName = _bucketName,
-            Region = Region.EuCentral1,
-            DestinationPath = @$"{_dir}\Download",
-            S3Directory = "DownloadTest/",
-            SearchPattern = "*",
-            DeleteSourceFile = true,
+            DeleteSourceObject = false,
             DownloadFromCurrentDirectoryOnly = false,
-            Overwrite = true,
             ThrowErrorIfNoMatch = false,
         };
 
-        var result = AmazonS3.DownloadObject(_input, default);
-        Assert.IsNotNull(result.Result.Results);
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "",
+            DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
+        };
+
+
+        var result = await AmazonS3.DownloadObject(connection, destination, default);
+        Assert.IsNotNull(result.Results);
+        Assert.IsTrue(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
+        Assert.IsTrue(CompareFiles());
+    }
+
+    /// <summary>
+    /// AWS creds get all keys. No info.
+    /// </summary>
+    [TestMethod]
+    public async Task AWSCreds_Info_NoOverwrite_Test()
+    {
+        Directory.Delete($@"{_dir}\Download", true);
+
+        connection = new Connection()
+        {
+            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
+            AwsAccessKeyId = _accessKey,
+            AwsSecretAccessKey = _secretAccessKey,
+            BucketName = _bucketName,
+            Region = Region.EuCentral1,
+            S3Directory = "DownloadTest/",
+            SearchPattern = "*",
+            DeleteSourceObject = false,
+            DownloadFromCurrentDirectoryOnly = false,
+            ThrowErrorIfNoMatch = false,
+        };
+
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "",
+            DestinationFileExistsAction = DestinationFileExistsAction.Info
+        };
+
+
+        var result = await AmazonS3.DownloadObject(connection, destination, default);
+        Assert.IsNotNull(result.Results);
+        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
+        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("was skipped because it already exists at")));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
+    }
+
+
+    /// <summary>
+    /// AWS creds get all keys. Info about skipping Overwrite.txt.
+    /// </summary>
+    [TestMethod]
+    public async Task AWSCreds_Info_WithInfo_Test()
+    {
+        connection = new Connection()
+        {
+            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
+            AwsAccessKeyId = _accessKey,
+            AwsSecretAccessKey = _secretAccessKey,
+            BucketName = _bucketName,
+            Region = Region.EuCentral1,
+            S3Directory = "DownloadTest/",
+            SearchPattern = "*",
+            DeleteSourceObject = false,
+            DownloadFromCurrentDirectoryOnly = false,
+            ThrowErrorIfNoMatch = false,
+        };
+
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "",
+            DestinationFileExistsAction = DestinationFileExistsAction.Info
+        };
+
+
+        var result = await AmazonS3.DownloadObject(connection, destination, default);
+        Assert.IsNotNull(result.Results);
+        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
+        Assert.IsTrue(result.Results.Any(x => x.ObjectData.Contains("was skipped because it already exists at")));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
+        Assert.IsFalse(CompareFiles());
+    }
+
+
+    /// <summary>
+    /// AWS creds get all keys. No error.
+    /// </summary>
+    [TestMethod]
+    public async Task AWSCreds_Error_NoOverwrite_Test()
+    {
+        Directory.Delete($@"{_dir}\Download", true);
+
+        connection = new Connection()
+        {
+            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
+            AwsAccessKeyId = _accessKey,
+            AwsSecretAccessKey = _secretAccessKey,
+            BucketName = _bucketName,
+            Region = Region.EuCentral1,
+            S3Directory = "DownloadTest/",
+            SearchPattern = "*",
+            DeleteSourceObject = false,
+            DownloadFromCurrentDirectoryOnly = false,
+            ThrowErrorIfNoMatch = false,
+        };
+
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "",
+            DestinationFileExistsAction = DestinationFileExistsAction.Error
+        };
+
+
+        var result = await AmazonS3.DownloadObject(connection, destination, default);
+        Assert.IsNotNull(result.Results);
+        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
+        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Error while downloading an object")));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
+    }
+
+
+    /// <summary>
+    /// AWS creds get all keys. Error because of Overwrite.txt.
+    /// </summary>
+    [TestMethod]
+    public async Task AWSCreds_Error_WithError_Test()
+    {
+        connection = new Connection()
+        {
+            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
+            AwsAccessKeyId = _accessKey,
+            AwsSecretAccessKey = _secretAccessKey,
+            BucketName = _bucketName,
+            Region = Region.EuCentral1,
+            S3Directory = "DownloadTest/",
+            SearchPattern = "*",
+            DeleteSourceObject = false,
+            DownloadFromCurrentDirectoryOnly = false,
+            ThrowErrorIfNoMatch = false,
+        };
+
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "",
+            DestinationFileExistsAction = DestinationFileExistsAction.Error
+        };
+
+
+        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, destination, default)).Result;
+        Assert.IsTrue(ex.Message.Contains("Error while downloading an object."));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
+        Assert.IsFalse(CompareFiles());
+    }
+
+    /// <summary>
+    /// AWS creds get all keys and delete source. Make sure the files have been downloaded and source is deleted.
+    /// </summary>
+    [TestMethod]
+    public async Task AWSCreds_DeleteSource_Test()
+    {
+        Directory.Delete($@"{_dir}\Download", true);
+
+        connection = new Connection()
+        {
+            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
+            AwsAccessKeyId = _accessKey,
+            AwsSecretAccessKey = _secretAccessKey,
+            BucketName = _bucketName,
+            Region = Region.EuCentral1,
+            S3Directory = "DownloadTest/",
+            SearchPattern = "*",
+            DeleteSourceObject = true,
+            DownloadFromCurrentDirectoryOnly = false,
+            ThrowErrorIfNoMatch = false,
+        };
+
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "",
+            DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
+        };
+
+
+        var result = await AmazonS3.DownloadObject(connection, destination, default);
+        Assert.IsNotNull(result.Results);
+        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
+        Assert.IsTrue(await FileExistsInS3("DownloadTest/testikansio/")); //Make sure the method works
+        Assert.IsFalse(await FileExistsInS3("DownloadTest/Testfile.txt"));
+    }
+
+    /// <summary>
+    /// AWS creds get all keys and delete source. Make sure the files have been downloaded and source is deleted.
+    /// </summary>
+    [TestMethod]
+    public async Task AWSCreds_Pattern_Test()
+    {
+        Directory.Delete($@"{_dir}\Download", true);
+
+        connection = new Connection()
+        {
+            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
+            AwsAccessKeyId = _accessKey,
+            AwsSecretAccessKey = _secretAccessKey,
+            BucketName = _bucketName,
+            Region = Region.EuCentral1,
+            S3Directory = "DownloadTest/",
+            SearchPattern = "Testfi*",
+            DeleteSourceObject = false,
+            DownloadFromCurrentDirectoryOnly = false,
+            ThrowErrorIfNoMatch = false,
+        };
+
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "",
+            DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
+        };
+
+        var result = await AmazonS3.DownloadObject(connection, destination, default);
+        Assert.IsNotNull(result.Results);
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
+        Assert.IsFalse(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
+        Assert.IsFalse(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
+    }
+
+    /// <summary>
+    /// AWS creds skip sub folder.
+    /// </summary>
+    [TestMethod]
+    public async Task AWSCreds_DownloadFromCurrentDirectoryOnly_Test()
+    {
+        Directory.Delete($@"{_dir}\Download", true);
+
+        connection = new Connection()
+        {
+            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
+            AwsAccessKeyId = _accessKey,
+            AwsSecretAccessKey = _secretAccessKey,
+            BucketName = _bucketName,
+            Region = Region.EuCentral1,
+            S3Directory = "DownloadTest/",
+            SearchPattern = "*",
+            DeleteSourceObject = false,
+            DownloadFromCurrentDirectoryOnly = true,
+            ThrowErrorIfNoMatch = false,
+        };
+
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "",
+            DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
+        };
+
+
+        var result = await AmazonS3.DownloadObject(connection, destination, default);
+        Assert.IsNotNull(result.Results);
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
+        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
+        Assert.IsFalse(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
+    }
+
+    /// <summary>
+    /// ThrowErrorIfNoMatch = true, 
+    /// </summary>
+    [TestMethod]
+    public async Task AWSCreds_ThrowErrorIfNoMatch_Test()
+    {
+        connection = new Connection()
+        {
+            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
+            AwsAccessKeyId = _accessKey,
+            AwsSecretAccessKey = _secretAccessKey,
+            BucketName = _bucketName,
+            Region = Region.EuCentral1,
+            S3Directory = "DownloadTest/",
+            SearchPattern = "NoFile",
+            DeleteSourceObject = false,
+            DownloadFromCurrentDirectoryOnly = false,
+            ThrowErrorIfNoMatch = true,
+        };
+
+        destination = new Destination()
+        {
+            DestinationDirectory = @$"{_dir}\Download",
+            DestinationFilename = "",
+            DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
+        };
+
+        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, destination, default)).Result;
+        Assert.IsTrue(ex.Message.Contains("No matches found with search pattern"));
     }
 
     /// <summary>
@@ -460,7 +686,7 @@ public class UnitTests
         var file3 = $@"{_dir}\DownloadTestFiles\Testfile.txt";
         var file4 = $@"{_dir}\DownloadTestFiles\DownloadFromCurrentDirectoryOnly\DownloadFromCurrentDirectoryOnly.txt";
 
-        var files = new List<string>{file1,file2,file3,file4};
+        var files = new List<string> { file1, file2, file3, file4 };
 
         Directory.CreateDirectory($@"{_dir}\Download");
         Directory.CreateDirectory($@"{_dir}\DownloadTestFiles\DownloadFromCurrentDirectoryOnly");
@@ -497,5 +723,18 @@ public class UnitTests
     {
         string mainFile = File.ReadAllText($@"{_dir}\Download\Overwrite.txt");
         return mainFile.Contains("Overwrite complete") && !mainFile.Contains("To Be Overwriten");
+    }
+
+    private async Task<bool> FileExistsInS3(string key)
+    {
+        var client = new AmazonS3Client(_accessKey, _secretAccessKey, RegionEndpoint.EUCentral1);
+
+        var request = new ListObjectsRequest
+        {
+            BucketName = _bucketName,
+            Prefix = key,
+        };
+        ListObjectsResponse response = await client.ListObjectsAsync(request);
+        return (response != null && response.S3Objects != null && response.S3Objects.Count > 0);
     }
 }
