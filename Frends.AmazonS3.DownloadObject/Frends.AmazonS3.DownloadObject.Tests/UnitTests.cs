@@ -235,7 +235,7 @@ public class UnitTests
         };
 
         var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default)).Result;
-        Assert.IsTrue(ex.Message.Contains("Destination required."));
+        Assert.IsTrue(ex.Message.Contains("FullPath required."));
     }
 
 
@@ -408,7 +408,7 @@ public class UnitTests
     /// AWS creds get all keys. Error because of Overwrite.txt.
     /// </summary>
     [TestMethod]
-    public async Task AWSCreds_Error_WithError_Test()
+    public void AWSCreds_Error_WithError_Test()
     {
         connection = new Input()
         {
@@ -532,7 +532,7 @@ public class UnitTests
     /// ThrowErrorIfNoMatch = true, 
     /// </summary>
     [TestMethod]
-    public async Task AWSCreds_ThrowErrorIfNoMatch_Test()
+    public void AWSCreds_ThrowErrorIfNoMatch_Test()
     {
         connection = new Input()
         {

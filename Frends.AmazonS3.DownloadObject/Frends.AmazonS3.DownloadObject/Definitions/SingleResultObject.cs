@@ -18,15 +18,15 @@ public class SingleResultObject
     public string ObjectName { get; private set; }
 
     /// <summary>
-    /// Destination folder.
+    /// Full path.
     /// </summary>
     /// <example>c:\temp, \\network\folder</example>
-    public string DestinationDirectory { get; private set; }
+    public string FullPath { get; private set; }
 
     internal SingleResultObject(string objectData, string objectName, string destinationDirectory)
     {
         ObjectData = objectData;
         ObjectName = objectName;
-        DestinationDirectory = destinationDirectory;
+        FullPath = destinationDirectory;
     }
 }
