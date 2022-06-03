@@ -28,7 +28,7 @@ public class AmazonS3
     /// <returns>List { string ObjectData, string ObjectName, string FullPath }</returns>
     public static async Task<Result> DownloadObject([PropertyTab] Input input, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(input.DestinationDirectory)) throw new Exception($"Destination required. {input.DestinationDirectory}");
+        if (string.IsNullOrWhiteSpace(input.DestinationDirectory)) throw new Exception($"Destination required.");
 
         switch (input.AuthenticationMethod)
         {

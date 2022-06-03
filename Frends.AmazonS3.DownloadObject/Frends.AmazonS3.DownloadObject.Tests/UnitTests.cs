@@ -235,7 +235,7 @@ public class UnitTests
         };
 
         var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default)).Result;
-        Assert.IsTrue(ex.Message.Contains("FullPath required."));
+        Assert.IsTrue(ex.Message.Contains("Destination required."));
     }
 
 
