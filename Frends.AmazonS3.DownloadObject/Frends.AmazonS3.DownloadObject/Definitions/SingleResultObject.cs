@@ -20,13 +20,13 @@ public class SingleResultObject
     /// <summary>
     /// Full path.
     /// </summary>
-    /// <example>c:\temp, \\network\folder</example>
+    /// <example>c:\temp\Filename.txt, \\network\folder\Filename.txt</example>
     public string FullPath { get; private set; }
 
-    internal SingleResultObject(string objectData, string objectName, string destinationDirectory)
+    internal SingleResultObject(string objectData, string objectName, string fullPath)
     {
         ObjectData = objectData;
         ObjectName = objectName;
-        FullPath = destinationDirectory;
+        FullPath = fullPath;
     }
 }
