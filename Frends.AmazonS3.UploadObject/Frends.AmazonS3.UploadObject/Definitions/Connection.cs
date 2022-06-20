@@ -22,7 +22,6 @@ public class Connection
     /// <example>"https://bucket.s3.region.amazonaws.com/object/file.txt?X-Amz-Expires=120X-Amz-Algorithm...</example>
     [PasswordPropertyText]
     [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.PreSignedURL)]
-    [DisplayFormat(DataFormatString = "Text")]
     public string PreSignedURL { get; set; }
 
     #region AWSCredentials
@@ -32,7 +31,6 @@ public class Connection
     /// <example>AKIAQWERTY7NJ5Q7NZ6Q</example>
     [PasswordPropertyText]
     [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
-    [DisplayFormat(DataFormatString = "Text")]
     public string AwsAccessKeyId { get; set; }
 
     /// <summary>
@@ -41,7 +39,6 @@ public class Connection
     /// <example>TVh5hgd3uGY/2CqH+Kkrrg3dadbXLsYe0jC3h+WD</example>
     [PasswordPropertyText]
     [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
-    [DisplayFormat(DataFormatString = "Text")]
     public string AwsSecretAccessKey { get; set; }
 
     /// <summary>
