@@ -1,0 +1,7 @@
+{
+  "Tasks": [
+    {
+      "TaskMethod": "Frends.AmazonS3.DownloadObject.AmazonS3.DownloadObject"
+    }
+  ]
+}

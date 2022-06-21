@@ -6,6 +6,7 @@ Frends tasks for Amazon S3 operations.
 
 - [Frends.AmazonS3.ListObjects](Frends.AmazonS3.ListObjects/README.md)
 - [Frends.AmazonS3.UploadObject](Frends.AmazonS3.UploadObject/README.md)
+- [Frends.AmazonS3.DownloadObject](Frends.AmazonS3.DownloadObject/README.md)
 
 # Contributing
 When contributing to this repository, please first discuss the change you wish to make via issue, email, or any other method with the owners of this repository before making a change.
