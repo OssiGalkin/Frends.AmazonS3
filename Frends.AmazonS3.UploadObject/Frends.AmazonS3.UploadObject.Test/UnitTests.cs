@@ -5,6 +5,8 @@ using Amazon.S3.Model;
 using Amazon;
 using System.IO;
 using Frends.AmazonS3.UploadObject.Definitions;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Frends.AmazonS3.UploadObject.Tests;
 
@@ -26,7 +28,7 @@ public class UnitTests
     /// Create test files and folders.
     /// </summary>
     [TestInitialize]
-    public void Initialize()
+    public async Task Initialize()
     {
         CreateTestFiles();
     }
@@ -35,9 +37,10 @@ public class UnitTests
     /// Delete test files and folders.
     /// </summary>
     [TestCleanup]
-    public void CleanUp()
+    public async Task CleanUp()
     {
         DeleteSourcePath();
+        await ObjectDeleteAsync();
     }
 
 
@@ -800,6 +803,108 @@ public class UnitTests
     private void DeleteSourcePath()
     {
         Directory.Delete($@"{_dir}\AWS", true);
+    }
+
+    public async Task ObjectDeleteAsync()
+    {
+        IAmazonS3 client = new AmazonS3Client(_accessKey, _secretAccessKey, RegionEndpoint.EUCentral1);
+
+        var keys = new List<string>
+        {
+            "Upload2022/AWSCreds/UploadTest/subfile.txt",
+            "Upload2022/AWSCreds/PreserveFolderStructure/Subfolder/subfile.txt",
+            "Upload2022/AWSCreds/AWSCredsUploadFromCurrentDirectoryOnly/test1.txt",
+            "Upload2022/AWSCreds/ACLPublicRead/subfile.txt",
+            "Upload2022/AWSCreds/ACLPublicReadWrite/subfile.txt",
+            "Upload2022/AWSCreds/ACLPrivate/subfile.txt",
+            "Upload2022/AWSCreds/PreserveFolderStructure/test1.txt",
+            "Upload2022/AWSCreds/AWSCredsUploadFromCurrentDirectoryOnly/overwrite_presign.txt",
+            "Upload2022/AWSCreds/UploadTest/test1.txt",
+            "Upload2022/AWSCreds/ACLPublicReadWrite/test1.txt",
+            "Upload2022/AWSCreds/ACLPublicRead/test1.txt",
+            "Upload2022/AWSCreds/ACLPrivate/test1.txt",
+            "Upload2022/AWSCreds/ACLLogDeliveryWrite/subfile.txt",
+            "Upload2022/AWSCreds/ACLPrivate/overwrite_presign.txt",
+            "Upload2022/AWSCreds/UploadTest/overwrite_presign.txt",
+            "Upload2022/AWSCreds/ACLLogDeliveryWrite/test1.txt",
+            "Upload2022/AWSCreds/ACLBucketOwnerRead/subfile.txt",
+            "Upload2022/AWSCreds/ACLPublicRead/overwrite_presign.txt",
+            "Upload2022/AWSCreds/ACLPublicReadWrite/overwrite_presign.txt",
+            "Upload2022/AWSCreds/PreserveFolderStructure/overwrite_presign.txt",
+            "Upload2022/AWSCreds/PreserveFolderStructure/overwrite_awscreds.txt",
+            "Upload2022/AWSCreds/AWSCredsUploadFromCurrentDirectoryOnly/overwrite_awscreds.txt",
+            "Upload2022/AWSCreds/UploadTest/overwrite_awscreds.txt",
+            "Upload2022/AWSCreds/ACLPublicReadWrite/overwrite_awscreds.txt",
+            "Upload2022/AWSCreds/ACLBucketOwnerRead/test1.txt",
+            "Upload2022/AWSCreds/ACLLogDeliveryWrite/overwrite_presign.txt",
+            "Upload2022/AWSCreds/ACLPublicRead/overwrite_awscreds.txt",
+            "Upload2022/AWSCreds/ACLPrivate/overwrite_awscreds.txt",
+            "Upload2022/PreSigned/UploadTest.txt",
+            "Upload2022/PreSigned/PreSignedNoFileInTopDirectoryTest.txt",
+            "Upload2022/PreSigned/PreSignedNoPath.txt",
+            "Upload2022/PreSigned/deletethis_presign.txt",
+            "Upload2022/AWSCreds/UploadTest/",
+            "Upload2022/AWSCreds/ThisShouldntExistsInS3_AWSCredsMissing/",
+            "Upload2022/AWSCreds/AWSCredsUploadFromCurrentDirectoryOnly/",
+            "Upload2022/AWSCreds/Overwrite/",
+            "Upload2022/AWSCreds/PreserveFolderStructure/",
+            "Upload2022/AWSCreds/AWSCredsReturnListOfObjectKeys/",
+            "Upload2022/AWSCreds/DeleteSource/deletethis_awscreds.txt",
+            "Upload2022/AWSCreds/ThisShouldntExistsInS3_AWSCredsThrowErrorIfNoMatch/",
+            "Upload2022/AWSCreds/ACLPrivate/",
+            "Upload2022/AWSCreds/ACLPublicRead/",
+            "Upload2022/AWSCreds/ACLPublicReadWrite/",
+            "Upload2022/AWSCreds/ACLAuthenticatedRead/deletethis_awscreds.txt",
+            "Upload2022/AWSCreds/ACLAuthenticatedRead/deletethis_presign.txt",
+            "Upload2022/AWSCreds/ACLAuthenticatedRead/overwrite_awscreds.txt",
+            "Upload2022/AWSCreds/ACLAuthenticatedRead/overwrite_presign.txt",
+            "Upload2022/AWSCreds/ACLAuthenticatedRead/subfile.txt",
+            "Upload2022/AWSCreds/ACLAuthenticatedRead/test1.txt",
+            "Upload2022/AWSCreds/ACLBucketOwnerRead/",
+            "Upload2022/AWSCreds/ACLBucketOwnerFullControl/deletethis_awscreds.txt",
+            "Upload2022/AWSCreds/ACLBucketOwnerFullControl/deletethis_presign.txt",
+            "Upload2022/AWSCreds/ACLBucketOwnerFullControl/overwrite_awscreds.txt",
+            "Upload2022/AWSCreds/ACLBucketOwnerFullControl/overwrite_presign.txt",
+            "Upload2022/AWSCreds/ACLBucketOwnerFullControl/subfile.txt",
+            "Upload2022/AWSCreds/ACLBucketOwnerFullControl/test1.txt",
+            "Upload2022/AWSCreds/ACLLogDeliveryWrite/",
+            "Upload2022/AWSCreds/ACLBucketOwnerRead/deletethis_awscreds.txt",
+            "Upload2022/AWSCreds/ACLBucketOwnerRead/deletethis_presign.txt",
+            "Upload2022/AWSCreds/ACLLogDeliveryWrite/deletethis_awscreds.txt",
+            "Upload2022/AWSCreds/ACLBucketOwnerRead/overwrite_awscreds.txt",
+            "Upload2022/AWSCreds/ACLLogDeliveryWrite/deletethis_presign.txt",
+            "Upload2022/AWSCreds/ACLPrivate/deletethis_awscreds.txt",
+            "Upload2022/AWSCreds/ACLPublicRead/deletethis_awscreds.txt",
+            "Upload2022/AWSCreds/ACLPublicReadWrite/deletethis_awscreds.txt",
+            "Upload2022/AWSCreds/PreserveFolderStructure/deletethis_awscreds.txt",
+            "Upload2022/AWSCreds/AWSCredsUploadFromCurrentDirectoryOnly/deletethis_awscreds.txt",
+            "Upload2022/AWSCreds/UploadTest/deletethis_awscreds.txt",
+            "Upload2022/AWSCreds/ACLBucketOwnerRead/overwrite_presign.txt",
+            "Upload2022/AWSCreds/ACLLogDeliveryWrite/overwrite_awscreds.txt",
+            "Upload2022/AWSCreds/ACLPrivate/deletethis_presign.txt",
+            "Upload2022/AWSCreds/ACLPublicRead/deletethis_presign.txt",
+            "Upload2022/AWSCreds/ACLPublicReadWrite/deletethis_presign.txt",
+            "Upload2022/AWSCreds/PreserveFolderStructure/deletethis_presign.txt",
+            "Upload2022/AWSCreds/AWSCredsUploadFromCurrentDirectoryOnly/deletethis_presign.txt",
+            "Upload2022/AWSCreds/UploadTest/deletethis_presign.txt",
+            "Upload2022/PreSigned/UploadTest.txt"
+
+
+
+
+
+
+        };
+
+        foreach (var key in keys)
+        {
+            var deleteObjectRequest = new DeleteObjectRequest
+            {
+                BucketName = _bucketName,
+                Key = key
+            };
+            await client.DeleteObjectAsync(deleteObjectRequest);
+        }
     }
 
 }
