@@ -28,7 +28,7 @@ public class UnitTests
     /// Create test files and folders.
     /// </summary>
     [TestInitialize]
-    public async Task Initialize()
+    public void Initialize()
     {
         CreateTestFiles();
     }
