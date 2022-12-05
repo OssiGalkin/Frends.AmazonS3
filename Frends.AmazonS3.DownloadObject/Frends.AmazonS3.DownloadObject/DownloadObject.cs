@@ -11,14 +11,25 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Linq;
 using Frends.AmazonS3.DownloadObject.Definitions;
+using System.Reflection;
+using System.Runtime.Loader;
 
 namespace Frends.AmazonS3.DownloadObject;
 
 /// <summary>
-/// Amazon S3 task.
+/// Amazon S3 Task.
 /// </summary>
 public class AmazonS3
 {
+    /// For mem cleanup.
+    static AmazonS3()
+    {
+        var currentAssembly = Assembly.GetExecutingAssembly();
+        var currentContext = AssemblyLoadContext.GetLoadContext(currentAssembly);
+        if (currentContext != null)
+            currentContext.Unloading += OnPluginUnloadingRequested;
+    }
+
     /// <summary>
     /// Download object(s) from AWS S3.
     /// [Documentation](https://tasks.frends.com/tasks#frends-tasks/Frends.AmazonS3.DownloadObject)
@@ -28,23 +39,29 @@ public class AmazonS3
     /// <returns>List { string ObjectData, string ObjectName, string FullPath }</returns>
     public static async Task<Result> DownloadObject([PropertyTab] Input input, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(input.DestinationDirectory)) throw new Exception($"Destination required.");
-
-        switch (input.AuthenticationMethod)
+        try
         {
-            case AuthenticationMethod.AWSCredentials:
-                if (string.IsNullOrWhiteSpace(input.AwsAccessKeyId) || string.IsNullOrWhiteSpace(input.AwsSecretAccessKey) || string.IsNullOrWhiteSpace(input.BucketName) || string.IsNullOrWhiteSpace(input.BucketName))
-                    throw new Exception("AWS Access Key Id and Secret Access Key required.");
-                return new Result { Results = await DownloadUtility(input, cancellationToken) };
+            if (string.IsNullOrWhiteSpace(input.DestinationDirectory)) throw new Exception($"Destination required.");
 
-            case AuthenticationMethod.PreSignedURL:
-                if (string.IsNullOrWhiteSpace(input.PreSignedURL))
-                    throw new Exception("AWS pre-signed URL required.");
-                return new Result { Results = await DownloadUtility(input, cancellationToken) };
+            switch (input.AuthenticationMethod)
+            {
+                case AuthenticationMethod.AWSCredentials:
+                    if (string.IsNullOrWhiteSpace(input.AwsAccessKeyId) || string.IsNullOrWhiteSpace(input.AwsSecretAccessKey) || string.IsNullOrWhiteSpace(input.BucketName) || string.IsNullOrWhiteSpace(input.BucketName))
+                        throw new Exception("AWS Access Key Id and Secret Access Key required.");
+                    return new Result { Results = await DownloadUtility(input, cancellationToken) };
+
+                case AuthenticationMethod.PreSignedURL:
+                    if (string.IsNullOrWhiteSpace(input.PreSignedURL))
+                        throw new Exception("AWS pre-signed URL required.");
+                    return new Result { Results = await DownloadUtility(input, cancellationToken) };
+                default: throw new NotSupportedException();
+            }
         }
-        return null;
+        catch (Exception ex)
+        {
+            throw new Exception($"DownloadObject error: {ex}");
+        }
     }
-
 
     private static async Task<List<SingleResultObject>> DownloadUtility(Input input, CancellationToken cancellationToken)
     {
@@ -53,78 +70,100 @@ public class AmazonS3
         switch (input.AuthenticationMethod)
         {
             case AuthenticationMethod.AWSCredentials:
-                var mask = new Regex(input.SearchPattern.Replace(".", "[.]").Replace("*", ".*").Replace("?", "."));
-                var targetPath = input.S3Directory + input.SearchPattern;
-                var client = new AmazonS3Client(input.AwsAccessKeyId, input.AwsSecretAccessKey, RegionSelection(input.Region));
-                using (client)
+                AmazonS3Client client = null;
+                try
                 {
-                    var allObjectsResponse = await client.ListObjectsAsync(input.BucketName, cancellationToken);
-                    var allObjectsInDirectory = allObjectsResponse.S3Objects;
-
-                    foreach (var fileObject in allObjectsInDirectory)
+                    var mask = new Regex(input.SearchPattern.Replace(".", "[.]").Replace("*", ".*").Replace("?", "."));
+                    var targetPath = input.S3Directory + input.SearchPattern;
+                    client = new AmazonS3Client(input.AwsAccessKeyId, input.AwsSecretAccessKey, RegionSelection(input.Region));
+                    using (client)
                     {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        if (mask.IsMatch(fileObject.Key.Split('/').Last()) && (targetPath.Split('/').Length == fileObject.Key.Split('/').Length || !input.DownloadFromCurrentDirectoryOnly) && !fileObject.Key.EndsWith("/") && fileObject.Key.StartsWith(input.S3Directory))
+                        var allObjectsResponse = await client.ListObjectsAsync(input.BucketName, cancellationToken);
+                        var allObjectsInDirectory = allObjectsResponse.S3Objects;
+
+                        foreach (var fileObject in allObjectsInDirectory)
                         {
-                            var fullPath = Path.Combine(input.DestinationDirectory, fileObject.Key.Split('/').Last());
-
-                            switch (input.DestinationFileExistsAction)
+                            cancellationToken.ThrowIfCancellationRequested();
+                            if (mask.IsMatch(fileObject.Key.Split('/').Last()) && (targetPath.Split('/').Length == fileObject.Key.Split('/').Length || !input.DownloadFromCurrentDirectoryOnly) && !fileObject.Key.EndsWith("/") && fileObject.Key.StartsWith(input.S3Directory))
                             {
-                                case DestinationFileExistsAction.Overwrite:
-                                    results.Add(new SingleResultObject(await WriteToFile(input, fileObject, client, fullPath), fileObject.Key.Split('/').Last(), fullPath));
-                                    break;
-                                case DestinationFileExistsAction.Info:
-                                    if (File.Exists(fullPath))
-                                        results.Add(new SingleResultObject($"File {fileObject.Key.Split('/').Last()} was skipped because it already exists at {fullPath} and DestinationFileExistsAction = Info. Set DestinationFileExistsAction = Overwrite to overwrite the file.", fileObject.Key.Split('/').Last(), fullPath));
-                                    else
-                                        results.Add(new SingleResultObject(await WriteToFile(input, fileObject, client, fullPath), fileObject.Key.Split('/').Last(), fullPath));
-                                    break;
-                                case DestinationFileExistsAction.Error:
-                                    if (File.Exists(fullPath))
-                                        throw new Exception($"Error while downloading an object. File {fileObject.Key.Split('/').Last()} already exists at {fullPath} and DestinationFileExistsAction = Error. Set DestinationFileExistsAction = Overwrite to overwrite the file or Info to skip existing file.");
-                                    else
-                                        results.Add(new SingleResultObject(await WriteToFile(input, fileObject, client, fullPath), fileObject.Key.Split('/').Last(), fullPath));
-                                    break;
-                                default:
-                                    break;
-                            }
+                                var fullPath = Path.Combine(input.DestinationDirectory, fileObject.Key.Split('/').Last());
 
-                            if (input.DeleteSourceObject) await DeleteSourceFile(client, input.BucketName, fileObject.Key, cancellationToken);
+                                switch (input.DestinationFileExistsAction)
+                                {
+                                    case DestinationFileExistsAction.Overwrite:
+                                        results.Add(new SingleResultObject(await WriteToFile(input, fileObject, client, fullPath), fileObject.Key.Split('/').Last(), fullPath));
+                                        break;
+                                    case DestinationFileExistsAction.Info:
+                                        if (File.Exists(fullPath))
+                                            results.Add(new SingleResultObject($"File {fileObject.Key.Split('/').Last()} was skipped because it already exists in {fullPath} and DestinationFileExistsAction = Info. Set DestinationFileExistsAction = Overwrite to overwrite the file.", fileObject.Key.Split('/').Last(), fullPath));
+                                        else
+                                            results.Add(new SingleResultObject(await WriteToFile(input, fileObject, client, fullPath), fileObject.Key.Split('/').Last(), fullPath));
+                                        break;
+                                    case DestinationFileExistsAction.Error:
+                                        if (File.Exists(fullPath))
+                                            throw new Exception($"Error while downloading an object. File {fileObject.Key.Split('/').Last()} already exists in {fullPath} and DestinationFileExistsAction = Error. Set DestinationFileExistsAction = Overwrite to overwrite the file or Info to skip existing file.");
+                                        else
+                                            results.Add(new SingleResultObject(await WriteToFile(input, fileObject, client, fullPath), fileObject.Key.Split('/').Last(), fullPath));
+                                        break;
+                                    default:
+                                        break;
+                                }
+
+                                if (input.DeleteSourceObject) await DeleteSourceFile(client, input.BucketName, fileObject.Key, cancellationToken);
+                            }
                         }
                     }
+                    break;
                 }
-                break;
+                catch (Exception ex)
+                {
+                    throw new Exception($"DownloadUtility error: {ex}");
+                }
+                finally
+                {
+                    client.Dispose();
+                }
 
             case AuthenticationMethod.PreSignedURL:
+                HttpClient httpClient = new();
 
-                var httpClient = new HttpClient();
-                var responseStream = await httpClient.GetStreamAsync(input.PreSignedURL, cancellationToken);
-                var nameFromURI = Regex.Match(input.PreSignedURL, @"[^\/]+(?=\?)");
-
-                var filename = nameFromURI.Value;
-                var path = Path.Combine(input.DestinationDirectory, filename);
-
-                switch (input.DestinationFileExistsAction)
+                try
                 {
-                    case DestinationFileExistsAction.Overwrite:
-                        results.Add(new SingleResultObject(await WriteToFilePreSigned(input, path, responseStream), filename, path));
-                        break;
-                    case DestinationFileExistsAction.Info:
-                        if (File.Exists(path))
-                            results.Add(new SingleResultObject($"File {filename} was skipped because it already exists at {path} and DestinationFileExistsAction = Info. Set DestinationFileExistsAction = Overwrite to overwrite this file.", filename, input.DestinationDirectory));
-                        else
+                    var responseStream = await httpClient.GetStreamAsync(input.PreSignedURL, cancellationToken);
+                    var nameFromURI = Regex.Match(input.PreSignedURL, @"[^\/]+(?=\?)");
+                    var filename = nameFromURI.Value;
+                    var path = Path.Combine(input.DestinationDirectory, filename);
+
+                    switch (input.DestinationFileExistsAction)
+                    {
+                        case DestinationFileExistsAction.Overwrite:
                             results.Add(new SingleResultObject(await WriteToFilePreSigned(input, path, responseStream), filename, path));
-                        break;
-                    case DestinationFileExistsAction.Error:
-                        if (File.Exists(path))
-                            throw new Exception($"Error while downloading an object {filename}. File {path} already exists and DestinationFileExistsAction = Error. Set DestinationFileExistsAction = Overwrite to overwrite this file or DestinationFileExistsAction = Info to skip this file.");
-                        else
-                            results.Add(new SingleResultObject(await WriteToFilePreSigned(input, path, responseStream), filename, path));
-                        break;
-                    default:
-                        break;
+                            break;
+                        case DestinationFileExistsAction.Info:
+                            if (File.Exists(path))
+                                results.Add(new SingleResultObject($"File {filename} was skipped because it already exists in {path} and DestinationFileExistsAction = Info. Set DestinationFileExistsAction = Overwrite to overwrite this file.", filename, input.DestinationDirectory));
+                            else
+                                results.Add(new SingleResultObject(await WriteToFilePreSigned(input, path, responseStream), filename, path));
+                            break;
+                        case DestinationFileExistsAction.Error:
+                            if (File.Exists(path))
+                                throw new Exception($"Error while downloading an object {filename}. File {path} already exists and DestinationFileExistsAction = Error. Set DestinationFileExistsAction = Overwrite to overwrite this file or DestinationFileExistsAction = Info to skip this file.");
+                            else
+                                results.Add(new SingleResultObject(await WriteToFilePreSigned(input, path, responseStream), filename, path));
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
                 }
-                break;
+                catch (Exception ex)
+                {
+                    throw new Exception($"DownloadUtility error: {ex}");
+                }
+                finally
+                {
+                    httpClient.Dispose();
+                }
         }
 
         if (results.Count == 0 && input.ThrowErrorIfNoMatch) throw new Exception($"No matches found with search pattern {input.SearchPattern}");
@@ -133,55 +172,77 @@ public class AmazonS3
 
     private static async Task<string> WriteToFilePreSigned(Input input, string fullPath, Stream responseStream)
     {
-        string responseBody;
-        using (var reader = new StreamReader(responseStream)) responseBody = await reader.ReadToEndAsync();
-
-        if (File.Exists(fullPath))
+        try
         {
-            var file = new FileInfo(fullPath);
+            string responseBody;
+            using (var reader = new StreamReader(responseStream))
+                responseBody = await reader.ReadToEndAsync();
 
-            while (IsFileLocked(file)) Thread.Sleep(1000);
-            File.Delete(fullPath);
-            File.WriteAllText(fullPath, responseBody);
-            return $@"Download with overwrite complete: {fullPath}";
+            if (File.Exists(fullPath))
+            {
+                var file = new FileInfo(fullPath);
+
+                while (IsFileLocked(file))
+                    Thread.Sleep(1000);
+
+                File.Delete(fullPath);
+                File.WriteAllText(fullPath, responseBody);
+                return $@"Download with overwrite complete: {fullPath}";
+            }
+            else
+            {
+                if (!Directory.Exists(input.DestinationDirectory)) Directory.CreateDirectory(input.DestinationDirectory);
+                File.WriteAllText(fullPath, responseBody);
+                return $@"Download complete: {fullPath}";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            if (!Directory.Exists(input.DestinationDirectory)) Directory.CreateDirectory(input.DestinationDirectory);
-            File.WriteAllText(fullPath, responseBody);
-            return $@"Download complete: {fullPath}";
+            throw new Exception($"WriteToFilePreSigned error: {ex}");
         }
+
     }
 
     private static async Task<string> WriteToFile(Input input, S3Object fileObject, AmazonS3Client s3Client, string fullPath)
     {
-        string responseBody;
-
-        var request = new GetObjectRequest
+        try
         {
-            BucketName = input.BucketName,
-            Key = fileObject.Key
-        };
+            string responseBody;
 
-        using (var response = await s3Client.GetObjectAsync(request))
-        using (var responseStream = response.ResponseStream)
+            var request = new GetObjectRequest
+            {
+                BucketName = input.BucketName,
+                Key = fileObject.Key
+            };
 
+            using (var response = await s3Client.GetObjectAsync(request))
+            using (var responseStream = response.ResponseStream)
+            using (var reader = new StreamReader(responseStream)) responseBody = await reader.ReadToEndAsync();
 
-        using (var reader = new StreamReader(responseStream)) responseBody = await reader.ReadToEndAsync();
-        if (File.Exists(fullPath))
-        {
-            var file = new FileInfo(fullPath);
+            if (File.Exists(fullPath))
+            {
+                var file = new FileInfo(fullPath);
 
-            while (IsFileLocked(file)) Thread.Sleep(1000);
-            File.Delete(fullPath);
-            File.WriteAllText(fullPath, responseBody);
-            return $@"Download with overwrite complete: {fullPath}";
+                while (IsFileLocked(file))
+                    Thread.Sleep(1000);
+
+                File.Delete(fullPath);
+                File.WriteAllText(fullPath, responseBody);
+
+                return $@"Download with overwrite complete: {fullPath}";
+            }
+            else
+            {
+                if (!Directory.Exists(input.DestinationDirectory))
+                    Directory.CreateDirectory(input.DestinationDirectory);
+
+                File.WriteAllText(fullPath, responseBody);
+                return $@"Download complete: {fullPath}";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            if (!Directory.Exists(input.DestinationDirectory)) Directory.CreateDirectory(input.DestinationDirectory);
-            File.WriteAllText(fullPath, responseBody);
-            return $@"Download complete: {fullPath}";
+            throw new Exception($"WriteToFile error: {ex}");
         }
     }
 
@@ -189,7 +250,7 @@ public class AmazonS3
     {
         try
         {
-            var deleteObjectRequest = new DeleteObjectRequest //delete source file from S3
+            var deleteObjectRequest = new DeleteObjectRequest
             {
                 BucketName = bucketName,
                 Key = key
@@ -198,7 +259,10 @@ public class AmazonS3
             await client.DeleteObjectAsync(deleteObjectRequest, cancellationToken);
             return $@"Source file {key} deleted.";
         }
-        catch (Exception ex) { throw new Exception($"Delete failed. {ex}"); }
+        catch (Exception ex)
+        {
+            throw new Exception($"DeleteSourceFile error: {ex}");
+        }
     }
 
     private static bool IsFileLocked(FileInfo file)
@@ -217,7 +281,10 @@ public class AmazonS3
             // 3. Does not exist (has already been processed).
             return true;
         }
-        finally { stream?.Close(); }
+        finally
+        {
+            stream?.Close();
+        }
 
         // File is not locked.
         return false;
@@ -252,5 +319,10 @@ public class AmazonS3
             Region.UsWest2 => RegionEndpoint.USWest2,
             _ => RegionEndpoint.EUWest1,
         };
+    }
+
+    private static void OnPluginUnloadingRequested(AssemblyLoadContext obj)
+    {
+        obj.Unloading -= OnPluginUnloadingRequested;
     }
 }

@@ -330,7 +330,7 @@ public class UnitTests
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
         Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
-        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("was skipped because it already exists at")));
+        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("was skipped because it already exists in")));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
@@ -362,7 +362,7 @@ public class UnitTests
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
         Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
-        Assert.IsTrue(result.Results.Any(x => x.ObjectData.Contains("was skipped because it already exists at")));
+        Assert.IsTrue(result.Results.Any(x => x.ObjectData.Contains("was skipped because it already exists in")));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
@@ -462,8 +462,7 @@ public class UnitTests
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
-        Assert.IsTrue(await FileExistsInS3("DownloadTest/testikansio/")); //Make sure the method works
-        Assert.IsFalse(await FileExistsInS3("DownloadTest/Testfile.txt"));
+        Assert.IsFalse(await FileExistsInS3("DownloadTest/testikansio/")); //Folder will be deleted if all files inside have been deleted.
     }
 
     /// <summary>
@@ -631,6 +630,7 @@ public class UnitTests
             Prefix = key,
         };
         ListObjectsResponse response = await client.ListObjectsAsync(request);
+        client.Dispose();
         return (response != null && response.S3Objects != null && response.S3Objects.Count > 0);
     }
 }

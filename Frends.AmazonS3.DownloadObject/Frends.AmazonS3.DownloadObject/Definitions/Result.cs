@@ -12,4 +12,3 @@ public class Result
     /// </summary>
     public List<SingleResultObject> Results { get; internal set; }
 }
-
