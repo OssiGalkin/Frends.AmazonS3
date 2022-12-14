@@ -22,30 +22,20 @@ public class UnitTests
 
     Input? connection;
 
-
-    /// <summary>
-    /// Create test files and folders before uploading them to S3.
-    /// </summary>
     [TestInitialize]
     public async Task Initialize()
     {
         await CreateTestFiles();
     }
 
-    /// <summary>
-    /// Delete test files and folders. CleanUp after each test to make sure overwriten file(s) won't make other tests fail.
-    /// </summary>
     [TestCleanup]
     public void CleanUp()
     {
         Directory.Delete($@"{_dir}\Download", true);
     }
 
-    /// <summary>
-    /// Testfile.txt existed without overwrite before CleanUp().
-    /// </summary>
     [TestMethod]
-    public void PreSignedURL_Overwrite_NewFile_Test()
+    public async Task PreSignedURL_Overwrite_NewFile_Test()
     {
         var setS3Key = $"DownloadTest/Testfile.txt";
 
@@ -57,18 +47,16 @@ public class UnitTests
             DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
         };
 
-        var result = AmazonS3.DownloadObject(connection, default);
-        Assert.IsNotNull(result.Result.Results);
-        Assert.IsFalse(result.Result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
+        var result = await AmazonS3.DownloadObject(connection, default);
+        Assert.IsNotNull(result.Results);
+        Assert.AreEqual(true, result.Success);
+        Assert.AreEqual(1, result.Results.Count);
+        Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
     }
 
-    /// <summary>
-    /// Get filename from PreSignedURL.
-    /// Testfile.txt existed without overwrite before CleanUp().
-    /// </summary>
     [TestMethod]
-    public void PreSignedURL_Overwrite_NoDestinationFilename_Test()
+    public async Task PreSignedURL_Overwrite_NoDestinationFilename_Test()
     {
         var setS3Key = $"DownloadTest/Testfile.txt";
 
@@ -80,17 +68,16 @@ public class UnitTests
             DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
         };
 
-        var result = AmazonS3.DownloadObject(connection, default);
-        Assert.IsNotNull(result.Result.Results);
-        Assert.IsFalse(result.Result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
+        var result = await AmazonS3.DownloadObject(connection, default);
+        Assert.IsNotNull(result.Results);
+        Assert.AreEqual(true, result.Success);
+        Assert.AreEqual(1, result.Results.Count);
+        Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
     }
 
-    /// <summary>
-    /// Result informs about overwrite and Overwrite.txt was overwriten.
-    /// </summary>
     [TestMethod]
-    public void PreSignedURL_Overwrite_Exists_Test()
+    public async Task PreSignedURL_Overwrite_Exists_Test()
     {
         var setS3Key = $"DownloadTest/Overwrite.txt";
 
@@ -102,38 +89,17 @@ public class UnitTests
             DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
         };
 
-        var result = AmazonS3.DownloadObject(connection, default);
-        Assert.IsTrue(result.Result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
+        var result = await AmazonS3.DownloadObject(connection, default);
+        Assert.IsNotNull(result.Results);
+        Assert.AreEqual(true, result.Success);
+        Assert.AreEqual(1, result.Results.Count);
+        Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
+        Assert.IsTrue(result.Results.Any(x => x.Overwritten.Equals(true)));
         Assert.IsTrue(CompareFiles());
     }
 
-    /// <summary>
-    /// Download complete without info.
-    /// </summary>
     [TestMethod]
-    public void PreSignedURL_Info_NewFile_Test()
-    {
-        var setS3Key = $"DownloadTest/Testfile.txt";
-
-        connection = new Input()
-        {
-            AuthenticationMethod = AuthenticationMethod.PreSignedURL,
-            PreSignedURL = CreatePreSignedURL(setS3Key),
-            DestinationDirectory = @$"{_dir}\Download",
-            DestinationFileExistsAction = DestinationFileExistsAction.Info
-        };
-
-        var result = AmazonS3.DownloadObject(connection, default);
-        Assert.IsNotNull(result.Result.Results);
-        Assert.IsFalse(result.Result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
-    }
-
-    /// <summary>
-    /// Inform about existing file and skip downloading.
-    /// </summary>
-    [TestMethod]
-    public void PreSignedURL_Info_Exists_Test()
+    public async Task PreSignedURL_Info_Exists_Test()
     {
         var setS3Key = $"DownloadTest/Overwrite.txt";
 
@@ -145,17 +111,18 @@ public class UnitTests
             DestinationFileExistsAction = DestinationFileExistsAction.Info
         };
 
-        var result = AmazonS3.DownloadObject(connection, default);
-        Assert.IsTrue(result.Result.Results.Any(x => x.ObjectData.Contains("already exists")));
+        var result = await AmazonS3.DownloadObject(connection, default);
+        Assert.IsNotNull(result.Results);
+        Assert.AreEqual(true, result.Success);
+        Assert.AreEqual(1, result.Results.Count);
+        Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
+        Assert.IsTrue(result.Results.Any(x => x.Info.Contains("Object skipped because file already exists in destination")));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsFalse(CompareFiles());
     }
 
-    /// <summary>
-    /// Download complete without error.
-    /// </summary>
     [TestMethod]
-    public void PreSignedURL_Error_NewFile_Test()
+    public async Task PreSignedURL_Error_NewFile_Test()
     {
         var setS3Key = $"DownloadTest/Testfile.txt";
 
@@ -167,41 +134,13 @@ public class UnitTests
             DestinationFileExistsAction = DestinationFileExistsAction.Error
         };
 
-        var result = AmazonS3.DownloadObject(connection, default);
-        Assert.IsNotNull(result.Result.Results);
-        Assert.IsFalse(result.Result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
+        var result = await AmazonS3.DownloadObject(connection, default);
+        _ = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
     }
 
-    /// <summary>
-    /// Error while downloading.
-    /// </summary>
     [TestMethod]
-    public void PreSignedURL_Error_Exists_Test()
-    {
-        var setS3Key = $"DownloadTest/Overwrite.txt";
-
-        connection = new Input()
-        {
-            AuthenticationMethod = AuthenticationMethod.PreSignedURL,
-            PreSignedURL = CreatePreSignedURL(setS3Key),
-            DestinationDirectory = @$"{_dir}\Download",
-            DestinationFileExistsAction = DestinationFileExistsAction.Error
-        };
-
-        var result = AmazonS3.DownloadObject(connection, default);
-        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default)).Result;
-        Assert.IsTrue(ex.Message.Contains("Error while downloading an object"));
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
-        Assert.IsFalse(CompareFiles());
-    }
-
-
-    /// <summary>
-    /// Missing pre-signed URL error.
-    /// </summary>
-    [TestMethod]
-    public void PreSignedURL_MissingURL_Test()
+    public async Task PreSignedURL_MissingURL_Test()
     {
         var setS3Key = $"DownloadTest/Testfile.txt";
 
@@ -213,16 +152,12 @@ public class UnitTests
             DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
         };
 
-        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default)).Result;
+        var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default));
         Assert.IsTrue(ex.Message.Contains("AWS pre-signed URL required."));
     }
 
-
-    /// <summary>
-    /// Missing destination path error.
-    /// </summary>
     [TestMethod]
-    public void PreSignedURL_DestinationDirectory_Test()
+    public async Task PreSignedURL_MissingDestinationDirectory_Test()
     {
         var setS3Key = $"DownloadTest/Testfile.txt";
 
@@ -234,14 +169,10 @@ public class UnitTests
             DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
         };
 
-        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default)).Result;
+        var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default));
         Assert.IsTrue(ex.Message.Contains("Destination required."));
     }
 
-
-    /// <summary>
-    /// AWS creds get all keys. No overwrite.
-    /// </summary>
     [TestMethod]
     public async Task AWSCreds_Overwrite_NewFiles_Test()
     {
@@ -265,16 +196,12 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
-        Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
+        Assert.AreEqual(true, result.Success);
+        Assert.AreEqual(3, result.Results.Count);
+        Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
     }
 
-
-    /// <summary>
-    /// AWS creds get all keys. Overwrite Overwrite.txt.
-    /// </summary>
     [TestMethod]
     public async Task AWSCreds_Overwrite_WithOverwrite_Test()
     {
@@ -296,16 +223,15 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.IsTrue(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
+        Assert.AreEqual(true, result.Success);
+        Assert.AreEqual(3, result.Results.Count);
+        Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
         Assert.IsTrue(CompareFiles());
     }
 
-    /// <summary>
-    /// AWS creds get all keys. No info.
-    /// </summary>
     [TestMethod]
     public async Task AWSCreds_Info_NoOverwrite_Test()
     {
@@ -329,17 +255,14 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
-        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("was skipped because it already exists in")));
+        Assert.AreEqual(true, result.Success);
+        Assert.AreEqual(3, result.Results.Count);
+        Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
     }
 
-
-    /// <summary>
-    /// AWS creds get all keys. Info about skipping Overwrite.txt.
-    /// </summary>
     [TestMethod]
     public async Task AWSCreds_Info_WithInfo_Test()
     {
@@ -361,18 +284,15 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
-        Assert.IsTrue(result.Results.Any(x => x.ObjectData.Contains("was skipped because it already exists in")));
+        Assert.AreEqual(true, result.Success);
+        Assert.AreEqual(3, result.Results.Count);
+        Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
         Assert.IsFalse(CompareFiles());
     }
 
-
-    /// <summary>
-    /// AWS creds get all keys. No error.
-    /// </summary>
     [TestMethod]
     public async Task AWSCreds_Error_NoOverwrite_Test()
     {
@@ -396,19 +316,16 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
-        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Error while downloading an object")));
+        Assert.AreEqual(true, result.Success);
+        Assert.AreEqual(3, result.Results.Count);
+        Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
     }
 
-
-    /// <summary>
-    /// AWS creds get all keys. Error because of Overwrite.txt.
-    /// </summary>
     [TestMethod]
-    public void AWSCreds_Error_WithError_Test()
+    public async Task AWSCreds_Error_WithError_Test()
     {
         connection = new Input()
         {
@@ -426,15 +343,12 @@ public class UnitTests
             DestinationFileExistsAction = DestinationFileExistsAction.Error
         };
 
-        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default)).Result;
-        Assert.IsTrue(ex.Message.Contains("Error while downloading an object."));
+        var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default));
+        Assert.IsTrue(ex.Message.Contains("already exists in"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsFalse(CompareFiles());
     }
 
-    /// <summary>
-    /// AWS creds get all keys and delete source. Make sure the files have been downloaded and source is deleted.
-    /// </summary>
     [TestMethod]
     public async Task AWSCreds_DeleteSource_Test()
     {
@@ -458,16 +372,15 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.IsFalse(result.Results.Any(x => x.ObjectData.Contains("Download with overwrite complete")));
+        Assert.AreEqual(true, result.Success);
+        Assert.AreEqual(3, result.Results.Count);
+        Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
         Assert.IsFalse(await FileExistsInS3("DownloadTest/testikansio/")); //Folder will be deleted if all files inside have been deleted.
     }
 
-    /// <summary>
-    /// AWS creds get all keys and delete source. Make sure the files have been downloaded and source is deleted.
-    /// </summary>
     [TestMethod]
     public async Task AWSCreds_Pattern_Test()
     {
@@ -491,14 +404,14 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
+        Assert.AreEqual(true, result.Success);
+        Assert.AreEqual(1, result.Results.Count);
+        Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsFalse(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsFalse(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
     }
 
-    /// <summary>
-    /// AWS creds skip sub folder.
-    /// </summary>
     [TestMethod]
     public async Task AWSCreds_DownloadFromCurrentDirectoryOnly_Test()
     {
@@ -522,16 +435,16 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
+        Assert.AreEqual(true, result.Success);
+        Assert.AreEqual(2, result.Results.Count);
+        Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
         Assert.IsFalse(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
     }
 
-    /// <summary>
-    /// ThrowErrorIfNoMatch = true, 
-    /// </summary>
     [TestMethod]
-    public void AWSCreds_ThrowErrorIfNoMatch_Test()
+    public async Task AWSCreds_ThrowErrorIfNoMatch_Test()
     {
         connection = new Input()
         {
@@ -549,17 +462,13 @@ public class UnitTests
             DestinationFileExistsAction = DestinationFileExistsAction.Overwrite
         };
 
-        var ex = Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default)).Result;
+        var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default));
         Assert.IsTrue(ex.Message.Contains("No matches found with search pattern"));
     }
 
-    /// <summary>
-    /// Create pre-signed URL.
-    /// </summary>
     private string CreatePreSignedURL(string key)
     {
         AmazonS3Client? client = new(_accessKey, _secretAccessKey, RegionEndpoint.EUCentral1);
-
         GetPreSignedUrlRequest request = new()
         {
             BucketName = _bucketName,
@@ -567,13 +476,9 @@ public class UnitTests
             Verb = HttpVerb.GET,
             Expires = DateTime.UtcNow.AddMinutes(2)
         };
-        var url = client.GetPreSignedURL(request);
-        return url;
+        return client.GetPreSignedURL(request);
     }
 
-    /// <summary>
-    /// Create testfiles after each tests to make sure correct files and texts exists.
-    /// </summary>
     private async Task<bool> CreateTestFiles()
     {
         var file1 = $@"{_dir}\Download\Overwrite.txt";
@@ -610,10 +515,6 @@ public class UnitTests
         return true;
     }
 
-    /// <summary>
-    /// Make sure that overwriten happened.
-    /// </summary>
-    /// <returns></returns>
     private bool CompareFiles()
     {
         string mainFile = File.ReadAllText($@"{_dir}\Download\Overwrite.txt");

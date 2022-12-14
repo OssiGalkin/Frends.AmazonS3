@@ -110,4 +110,12 @@ public class Input
     /// <example>c:\temp, \\network\folder</example>
     [DisplayFormat(DataFormatString = "Text")]
     public string DestinationDirectory { get; set; }
+
+    /// <summary>
+    /// For how long will this Task try to write to a locked file.
+    /// Value in seconds.
+    /// </summary>
+    /// <example>10</example>
+    [DefaultValue(10)]
+    public int FileLockedRetries { get; set; }
 }

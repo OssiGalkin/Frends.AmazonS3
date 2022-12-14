@@ -6,27 +6,32 @@
 public class SingleResultObject
 {
     /// <summary>
-    /// Single download result.
-    /// </summary>
-    /// <example>Download complete: {fullPath}.</example>
-    public string ObjectData { get; private set; }
-
-    /// <summary>
     /// Object's name.
     /// </summary>
     /// <example>Filename.txt</example>
-    public string ObjectName { get; private set; }
+    public string ObjectName { get; set; }
 
     /// <summary>
-    /// Full path.
+    /// Full destination path.
     /// </summary>
     /// <example>c:\temp\Filename.txt, \\network\folder\Filename.txt</example>
-    public string FullPath { get; private set; }
+    public string FullPath { get; set; }
 
-    internal SingleResultObject(string objectData, string objectName, string fullPath)
-    {
-        ObjectData = objectData;
-        ObjectName = objectName;
-        FullPath = fullPath;
-    }
+    /// <summary>
+    /// Original destination file was overwritten.
+    /// </summary>
+    /// <example>false</example>
+    public bool Overwritten { get; set; }
+
+    /// <summary>
+    /// Source object was deleted.
+    /// </summary>
+    /// <example>false</example>
+    public bool SourceDeleted { get; set; }
+
+    /// <summary>
+    /// Additional information of this object.
+    /// </summary>
+    /// <example>Object skipped because file already exists in destination.</example>
+    public string Info { get; set; }
 }
