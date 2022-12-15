@@ -3,7 +3,7 @@
 ## [2.0.0] - 2022-12-02
 ### Modified
 - Memory leak fix.
-- SingleResultObject reform:
+- SingleResultObject parameter changes:
 	- New parameters: Overwritten, SourceDeleted, Info.
 	- Removed parameter: ObjectData (replaced by Info). 
 
