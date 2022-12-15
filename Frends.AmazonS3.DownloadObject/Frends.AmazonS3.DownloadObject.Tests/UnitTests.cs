@@ -49,7 +49,7 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.AreEqual(true, result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(1, result.Results.Count);
         Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
@@ -70,7 +70,7 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.AreEqual(true, result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(1, result.Results.Count);
         Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
@@ -91,7 +91,7 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.AreEqual(true, result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(1, result.Results.Count);
         Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(result.Results.Any(x => x.Overwritten.Equals(true)));
@@ -113,7 +113,7 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.AreEqual(true, result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(1, result.Results.Count);
         Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(result.Results.Any(x => x.Info.Contains("Object skipped because file already exists in destination")));
@@ -135,7 +135,8 @@ public class UnitTests
         };
 
         var result = await AmazonS3.DownloadObject(connection, default);
-        _ = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default));
+        var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DownloadObject(connection, default));
+        Assert.IsTrue(ex.Message.Contains("already exists in"));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
     }
 
@@ -196,7 +197,7 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.AreEqual(true, result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(3, result.Results.Count);
         Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\DownloadFromCurrentDirectoryOnly.txt"));
@@ -223,7 +224,7 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.AreEqual(true, result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(3, result.Results.Count);
         Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
@@ -255,7 +256,7 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.AreEqual(true, result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(3, result.Results.Count);
         Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
@@ -284,7 +285,7 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.AreEqual(true, result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(3, result.Results.Count);
         Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
@@ -316,7 +317,7 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.AreEqual(true, result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(3, result.Results.Count);
         Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
@@ -372,7 +373,7 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.AreEqual(true, result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(3, result.Results.Count);
         Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));
@@ -404,7 +405,7 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.AreEqual(true, result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(1, result.Results.Count);
         Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Testfile.txt"));
@@ -435,7 +436,7 @@ public class UnitTests
 
         var result = await AmazonS3.DownloadObject(connection, default);
         Assert.IsNotNull(result.Results);
-        Assert.AreEqual(true, result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(2, result.Results.Count);
         Assert.IsTrue(result.Results.Any(x => x.ObjectName != null));
         Assert.IsTrue(File.Exists(@$"{_dir}\Download\Overwrite.txt"));

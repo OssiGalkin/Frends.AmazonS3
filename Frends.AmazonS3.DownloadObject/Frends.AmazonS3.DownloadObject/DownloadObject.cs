@@ -46,7 +46,7 @@ public class AmazonS3
 
         if (string.IsNullOrWhiteSpace(input.DestinationDirectory)) throw new Exception($"Destination required.");
 
-        if (input.AuthenticationMethod.Equals(AuthenticationMethod.AWSCredentials))
+        if (input.AuthenticationMethod is AuthenticationMethod.AWSCredentials)
         {
             var mask = new Regex(input.SearchPattern.Replace(".", "[.]").Replace("*", ".*").Replace("?", "."));
             var targetPath = input.S3Directory + input.SearchPattern;
@@ -91,13 +91,13 @@ public class AmazonS3
 
         try
         {
-            if (fileExists && input.DestinationFileExistsAction.Equals(DestinationFileExistsAction.Error))
+            if (fileExists && input.DestinationFileExistsAction is DestinationFileExistsAction.Error)
                 throw new Exception($"File {file} already exists in {fullPath}.");
 
-            if (fileExists && input.DestinationFileExistsAction.Equals(DestinationFileExistsAction.Info))
-                return new SingleResultObject() { FullPath = fullPath, ObjectName = file, Overwritten = false, SourceDeleted = sourceDeleted, Info = "Object skipped because file already exists in destination." };
+            if (fileExists && input.DestinationFileExistsAction is DestinationFileExistsAction.Info)
+                return new SingleResultObject(file, fullPath, false, sourceDeleted, "Object skipped because file already exists in destination.");
 
-            if (!fileExists || (fileExists && input.DestinationFileExistsAction.Equals(DestinationFileExistsAction.Overwrite)))
+            if (!fileExists || (fileExists && input.DestinationFileExistsAction is DestinationFileExistsAction.Overwrite))
             {
                 string responseBody;
                 Directory.CreateDirectory(input.DestinationDirectory);
@@ -117,7 +117,7 @@ public class AmazonS3
                     responseBody = await reader.ReadToEndAsync();
                 }
 
-                if (!fileExists || (fileExists && input.DestinationFileExistsAction.Equals(DestinationFileExistsAction.Overwrite) && !FileLocked(input.FileLockedRetries, fullPath, cancellationToken)))
+                if (!fileExists || (fileExists && input.DestinationFileExistsAction is DestinationFileExistsAction.Overwrite && !FileLocked(input.FileLockedRetries, fullPath, cancellationToken)))
                 {
                     File.WriteAllText(fullPath, responseBody);
 
@@ -128,7 +128,7 @@ public class AmazonS3
                     throw new Exception($"WriteToFile error: An unexpected error.");
 
                 if (File.Exists(fullPath))
-                    return new SingleResultObject() { FullPath = fullPath, ObjectName = file, Overwritten = input.DestinationFileExistsAction.Equals(DestinationFileExistsAction.Overwrite), SourceDeleted = sourceDeleted };
+                    return new SingleResultObject(file, fullPath, input.DestinationFileExistsAction is DestinationFileExistsAction.Overwrite, sourceDeleted, null );
                 else
                     throw new Exception("WriteToFile error: An unexpected error.");
             }
@@ -144,9 +144,7 @@ public class AmazonS3
     {
         try
         {
-            var retries = 0;
-
-            while (retries <= fileLockedRetries)
+            for(var i = 0; i <= fileLockedRetries;)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 using FileStream inputStream = File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.None);
@@ -154,7 +152,7 @@ public class AmazonS3
                     return false;
                 else
                 {
-                    retries++;
+                    i++;
                     Thread.Sleep(1000);
                 }
             }
@@ -177,7 +175,7 @@ public class AmazonS3
                 Key = key
             };
 
-            var deleted = await client.DeleteObjectAsync(deleteObjectRequest, cancellationToken);
+            await client.DeleteObjectAsync(deleteObjectRequest, cancellationToken);
             return true;
         }
         catch (Exception ex)
