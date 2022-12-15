@@ -144,17 +144,14 @@ public class AmazonS3
     {
         try
         {
-            for(var i = 0; i <= fileLockedRetries;)
+            for(var i = 0; i <= fileLockedRetries; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 using FileStream inputStream = File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.None);
                 if (inputStream.Length > 0)
                     return false;
                 else
-                {
-                    i++;
                     Thread.Sleep(1000);
-                }
             }
             
             throw new Exception($"FileLocked error: {fullPath} was locked. Max Input.FileLockedRetries = {fileLockedRetries} exceeded.");
