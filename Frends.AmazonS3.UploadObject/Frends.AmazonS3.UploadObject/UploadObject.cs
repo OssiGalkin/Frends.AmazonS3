@@ -38,6 +38,7 @@ public class AmazonS3
     /// <returns>Object { bool success, List&lt;string&gt; uploadedObjects, string debugLog } </returns>
     public static async Task<Result> UploadObject([PropertyTab] Connection connection, [PropertyTab] Input input, CancellationToken cancellationToken)
     {
+
         if (!Directory.Exists(input.FilePath)) throw new ArgumentException(@"Source path not found. ", input.FilePath);
 
         var localRoot = new DirectoryInfo(input.FilePath);
@@ -50,11 +51,6 @@ public class AmazonS3
         if (connection.ThrowErrorIfNoMatch && filesToCopy.Length < 1)
             throw new Exception($"No files match the filemask '{input.FileMask}' within supplied path.");
 
-        return await ExecuteUpload(filesToCopy, input, connection, cancellationToken);
-    }
-
-    private static async Task<Result> ExecuteUpload(IEnumerable<FileInfo> filesToCopy, Input input, Connection connection, CancellationToken cancellationToken)
-    {
         var result = new List<string>();
         var sw = new StringWriter();
 
