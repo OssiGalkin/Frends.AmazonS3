@@ -3,18 +3,32 @@
 namespace Frends.AmazonS3.UploadObject.Definitions;
 
 /// <summary>
-/// Result.
+/// Task's result.
 /// </summary>
 public class Result
 {
     /// <summary>
-    /// List of upload result(s).
+    /// Upload complete.
     /// </summary>
-    /// <example>"Upload complete: {fullpath}</example>
-    public List<UploadResult> Results { get; private set; }
+    /// <example>true</example>
+    public bool Success { get; private set; }
 
-    internal Result(List<UploadResult> uploadResult)
+    /// <summary>
+    /// Uploaded Object.
+    /// </summary>
+    /// <example>{C:\temp\ExampleFile.txt}, {temp\ExampleFile.txt}</example>
+    public List<string> UploadedObjects { get; private set; }
+
+    /// <summary>
+    /// Debug log of file upload.
+    /// </summary>
+    /// <example>EnvironmentVariableInternalConfiguration 1|2023-02-06T08:52:17.618Z|INFO|The environment variable AWS_ENABLE_ENDPOINT_DISCOVERY was not set with a value...</example>
+    public string DebugLog { get; private set; }
+
+    internal Result(bool success, List<string> uploadedObjects, string debugLog)
     {
-        Results = uploadResult;
+        Success = success;
+        UploadedObjects = uploadedObjects;
+        DebugLog = debugLog;
     }
 }

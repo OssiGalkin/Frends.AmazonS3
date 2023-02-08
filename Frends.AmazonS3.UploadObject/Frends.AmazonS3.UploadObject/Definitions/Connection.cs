@@ -96,5 +96,12 @@ public class Connection
     /// </summary>
     /// <example>false</example>
     public bool ThrowErrorIfNoMatch { get; set; }
+
+    /// <summery>
+    /// Throws exception if error occures in upload.
+    /// </summery>
+    /// <example>false</example>
+    [DefaultValue(false)]
+    public bool ThrowExceptionOnErrorResponse { get; set; }
     #endregion options
 }
