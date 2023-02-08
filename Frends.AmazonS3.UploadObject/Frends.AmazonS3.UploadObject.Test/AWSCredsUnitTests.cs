@@ -334,7 +334,7 @@ public class AWSCredsUnitTests
         Assert.IsTrue(result.Success);
         Assert.IsNotNull(result.DebugLog);
         Assert.IsTrue(result.UploadedObjects.Any(x => x.Contains("deletethis_awscreds.txt")));
-        Assert.IsTrue(!File.Exists($@"{_dir}\AWS\{fileName}"));
+        Assert.IsFalse(File.Exists($@"{_dir}\AWS\{fileName}"));
     }
 
     [TestMethod]
