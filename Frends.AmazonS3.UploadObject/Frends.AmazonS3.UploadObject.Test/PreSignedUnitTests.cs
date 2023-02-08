@@ -77,7 +77,7 @@ public class PreSignedUnitTests
 
         var result = await AmazonS3.UploadObject(_connection, _input, default);
         Assert.AreEqual(1, result.UploadedObjects.Count);
-        Assert.AreEqual(true, result.Success);
+        Assert.IsTrue(result.Success);
         Assert.AreEqual(string.Empty, result.DebugLog);
         Assert.IsTrue(result.UploadedObjects.Any(x => x.Contains("deletethis_presign.txt")));
     }
