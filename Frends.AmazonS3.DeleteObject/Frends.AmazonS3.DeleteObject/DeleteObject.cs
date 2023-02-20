@@ -39,6 +39,9 @@ public class AmazonS3
     {
         var result = new List<SingleResultObject>();
 
+        if (input.Objects is null || input.Objects.Length < 0)
+            throw new Exception("DeleteObject error: Input.Objects cannot be empty.");
+
         try
         {
             using AmazonS3Client client = new(input.AwsAccessKeyId, input.AwsSecretAccessKey, RegionSelection(input.Region));
@@ -59,6 +62,7 @@ public class AmazonS3
                 {
                     case NotExistsHandler.None:
                     case NotExistsHandler.Throw:
+                    default:
                         var deleted = await DeleteS3Object(client, obj.BucketName, obj.Key, versionId, cancellationToken);
                         result.Add(new SingleResultObject() { Success = true, Key = obj.Key, VersionId = deleted.VersionId, Error = null });
                         break;

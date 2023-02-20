@@ -22,7 +22,7 @@ public class UnitTests
     public async Task Init()
     {
         var key = "ExampleFile";
-        var objects = new[] { new S3ObjectArray { BucketName = _bucketName, Key = key }, };
+        var objects = new[] { new S3ObjectArray { BucketName = _bucketName, Key = key, VersionId = null }, };
 
         if (!await FileExistsInS3(key))
             await CreateTestFiles(objects);
@@ -36,10 +36,48 @@ public class UnitTests
     }
 
     [TestMethod]
-    public async Task DeleteSingleObject()
+    public async Task DeleteSingleObject_NoVersion()
     {
         var key = "Key1.txt";
-        var objects = new[] { new S3ObjectArray { BucketName = _bucketName, Key = key } };
+        var objects = new[] { new S3ObjectArray { BucketName = _bucketName, Key = key, VersionId = null } };
+        var handlers = new List<NotExistsHandler>() { NotExistsHandler.None, NotExistsHandler.Info, NotExistsHandler.Throw };
+
+        foreach (var handler in handlers)
+        {
+            await CreateTestFiles(objects);
+
+            var input = new Input()
+            {
+                AwsAccessKeyId = _accessKey,
+                AwsSecretAccessKey = _secretAccessKey,
+                Region = Region.EuCentral1,
+                Objects = objects
+            };
+
+            var options = new Options()
+            {
+                NotExistsHandler = handler
+            };
+
+            var result = await AmazonS3.DeleteObject(input, options, default);
+            Assert.IsTrue(result.Success);
+            Assert.AreEqual(objects.Length, result.Data.Count);
+            Assert.IsTrue(result.Data[0].Success);
+            Assert.AreEqual(key, result.Data[0].Key);
+            Assert.IsNotNull(result.Data[0].VersionId);
+            Assert.IsNull(result.Data[0].Error);
+            Assert.IsFalse(FileExistsInS3(key).Result);
+            Assert.IsTrue(FileExistsInS3("ExampleFile").Result);
+
+            CleanUp();
+        }
+    }
+
+    [TestMethod]
+    public async Task DeleteSingleObject_Version()
+    {
+        var key = "Key1.txt";
+        var objects = new[] { new S3ObjectArray { BucketName = _bucketName, Key = key, VersionId = "1" } };
         var handlers = new List<NotExistsHandler>() { NotExistsHandler.None, NotExistsHandler.Info, NotExistsHandler.Throw };
 
         foreach (var handler in handlers)
@@ -183,7 +221,7 @@ public class UnitTests
     public async Task DeleteObject_NotExistsHandler_Throw()
     {
         var key = "Foo";
-        var objects = new[] { new S3ObjectArray { BucketName = _bucketName, Key = key } };
+        var objects = new[] { new S3ObjectArray { BucketName = _bucketName, Key = key, VersionId = null } };
 
         var input = new Input()
         {
@@ -204,10 +242,10 @@ public class UnitTests
     }
 
     [TestMethod]
-    public async Task DeleteSingleObject_MissingCreds()
+    public async Task DeleteSingleObject_MissingInputs()
     {
         var key = "Foo";
-        var objects = new[] { new S3ObjectArray { BucketName = _bucketName, Key = key } };
+        var objects = new[] { new S3ObjectArray { BucketName = _bucketName, Key = key, VersionId = null } };
 
         var input = new Input()
         {
@@ -226,6 +264,52 @@ public class UnitTests
         Assert.IsNotNull(ex.InnerException);
         Assert.AreEqual("Access Denied", ex.InnerException.Message);
     }
+
+    [TestMethod]
+    public async Task DeleteSingleObject_Missing_AwsSecretAccessKey()
+    {
+        var key = "Foo";
+        var objects = new[] { new S3ObjectArray { BucketName = _bucketName, Key = key, VersionId = null } };
+
+        var input = new Input()
+        {
+            AwsAccessKeyId = _accessKey,
+            AwsSecretAccessKey = "",
+            Region = Region.EuCentral1,
+            Objects = objects
+        };
+        var options = new Options()
+        {
+            NotExistsHandler = NotExistsHandler.None
+        };
+
+        var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DeleteObject(input, options, default));
+        Assert.IsNotNull(ex.InnerException);
+        Assert.IsTrue(ex.InnerException.Message.Contains("Value cannot be null"));
+    }
+
+    [TestMethod]
+    public async Task DeleteSingleObject_Missing_Objects()
+    {
+        var input = new Input()
+        {
+            AwsAccessKeyId = _accessKey,
+            AwsSecretAccessKey = _secretAccessKey,
+            Region = Region.EuCentral1,
+            Objects = null
+        };
+
+        var options = new Options()
+        {
+            NotExistsHandler = NotExistsHandler.None
+        };
+
+        var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DeleteObject(input, options, default));
+        Assert.IsNotNull(ex);
+        Assert.AreEqual("DeleteObject error: Input.Objects cannot be empty.", ex.Message);
+    }
+
+
 
     private async Task CreateTestFiles(S3ObjectArray[] array)
     {
