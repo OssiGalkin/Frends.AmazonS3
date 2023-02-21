@@ -78,31 +78,9 @@ public class UnitTests
     {
         var key = "Key1.txt";
         var objects = new[] { new S3ObjectArray { BucketName = _bucketName, Key = key, VersionId = null } };
-        var regions = new List<Region>() { 
-            Region.AfSouth1,
-            Region.ApEast1,
-            Region.ApNortheast1,
-            Region.ApNortheast2,
-            Region.ApNortheast3,
-            Region.ApSouth1,
-            Region.ApSoutheast1,
-            Region.ApSoutheast2,
-            Region.CaCentral1,
-            Region.CnNorth1,
-            Region.CnNorthWest1,
-            Region.EuNorth1,
-            Region.EuSouth1,
-            Region.EuWest1,
-            Region.EuWest2,
-            Region.EuWest3,
-            Region.MeSouth1,
-            Region.SaEast1,
-            Region.UsEast1,
-            Region.UsEast2,
-            Region.UsWest1,
-            Region.UsWest2 };
+        var regions = new List<Region>() { Region.AfSouth1, Region.ApEast1, Region.ApNortheast1, Region.ApNortheast2, Region.ApNortheast3, Region.ApSouth1, Region.ApSoutheast1, Region.ApSoutheast2, Region.CaCentral1, Region.CnNorth1, Region.CnNorthWest1, Region.EuNorth1, Region.EuSouth1, Region.EuWest1, Region.EuWest2, Region.EuWest3, Region.MeSouth1, Region.SaEast1, Region.UsEast1, Region.UsEast2, Region.UsWest1, Region.UsWest2 };
 
-        foreach(var region in regions)
+        foreach (var region in regions)
         {
             await CreateTestFiles(objects);
 
