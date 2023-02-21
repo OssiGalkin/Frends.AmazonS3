@@ -15,4 +15,10 @@ public class Options
     /// <example>NotExistsHandler.None</example>
     [DefaultValue(NotExistsHandler.None)]
     public NotExistsHandler NotExistsHandler { get; set; }
+
+    /// <summary>
+    /// Timeout in seconds.
+    /// </summary>
+    /// <example>5</example>
+    public int Timeout { get; set; }
 }

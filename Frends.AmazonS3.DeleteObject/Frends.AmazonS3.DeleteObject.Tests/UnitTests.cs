@@ -56,6 +56,7 @@ public class UnitTests
             var options = new Options()
             {
                 NotExistsHandler = handler,
+                Timeout = 1
             };
 
             var result = await AmazonS3.DeleteObject(input, options, default);
@@ -77,7 +78,7 @@ public class UnitTests
     {
         var key = "Key1.txt";
         var objects = new[] { new S3ObjectArray { BucketName = _bucketName, Key = key, VersionId = null } };
-        var regions = new List<Region>() {
+        var regions = new List<Region>() { 
             Region.AfSouth1,
             Region.ApEast1,
             Region.ApNortheast1,
@@ -101,7 +102,7 @@ public class UnitTests
             Region.UsWest1,
             Region.UsWest2 };
 
-        foreach (var region in regions)
+        foreach(var region in regions)
         {
             await CreateTestFiles(objects);
 
@@ -116,6 +117,7 @@ public class UnitTests
             var options = new Options()
             {
                 NotExistsHandler = NotExistsHandler.None,
+                Timeout = 0
             };
 
             var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DeleteObject(input, options, default));
@@ -147,6 +149,7 @@ public class UnitTests
             var options = new Options()
             {
                 NotExistsHandler = handler,
+                Timeout = 1
             };
 
             var result = await AmazonS3.DeleteObject(input, options, default);
@@ -185,6 +188,7 @@ public class UnitTests
             var options = new Options()
             {
                 NotExistsHandler = handler,
+                Timeout = 1
             };
 
             var result = await AmazonS3.DeleteObject(input, options, default);
@@ -233,6 +237,7 @@ public class UnitTests
         var options = new Options()
         {
             NotExistsHandler = NotExistsHandler.Info,
+            Timeout = 1
         };
 
         // Delete one of the keys.
@@ -286,6 +291,7 @@ public class UnitTests
         var options = new Options()
         {
             NotExistsHandler = NotExistsHandler.Throw,
+            Timeout = 1
         };
 
         var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DeleteObject(input, options, default));
@@ -310,6 +316,7 @@ public class UnitTests
         var options = new Options()
         {
             NotExistsHandler = NotExistsHandler.None,
+            Timeout = 1
         };
 
         var ex = await Assert.ThrowsExceptionAsync<AmazonS3Exception>(async () => await AmazonS3.DeleteObject(input, options, default));
@@ -333,6 +340,7 @@ public class UnitTests
         var options = new Options()
         {
             NotExistsHandler = NotExistsHandler.None,
+            Timeout = 1
         };
 
         var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DeleteObject(input, options, default));
@@ -354,6 +362,7 @@ public class UnitTests
         var options = new Options()
         {
             NotExistsHandler = NotExistsHandler.None,
+            Timeout = 1
         };
 
         var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DeleteObject(input, options, default));

@@ -9,6 +9,7 @@ using Frends.AmazonS3.DeleteObject.Definitions;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Collections.Generic;
+using Amazon.Runtime;
 
 namespace Frends.AmazonS3.DeleteObject;
 
@@ -44,7 +45,13 @@ public class AmazonS3
 
         try
         {
-            using AmazonS3Client client = new(input.AwsAccessKeyId, input.AwsSecretAccessKey, RegionSelection(input.Region));
+            var clientConfig = new AmazonS3Config()
+            {
+                Timeout = TimeSpan.FromSeconds(options.Timeout),
+                RegionEndpoint = RegionSelection(input.Region),
+            };
+
+            using AmazonS3Client client = new(input.AwsAccessKeyId, input.AwsSecretAccessKey, clientConfig);
 
             // Do existing check here to skip case where some of the objects have been deleted before exception occurs.
             if (options.NotExistsHandler is NotExistsHandler.Throw)
