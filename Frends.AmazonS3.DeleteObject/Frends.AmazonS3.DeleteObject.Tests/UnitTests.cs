@@ -50,12 +50,12 @@ public class UnitTests
                 AwsAccessKeyId = _accessKey,
                 AwsSecretAccessKey = _secretAccessKey,
                 Region = Region.EuCentral1,
-                Objects = objects
+                Objects = objects,
             };
 
             var options = new Options()
             {
-                NotExistsHandler = handler
+                NotExistsHandler = handler,
             };
 
             var result = await AmazonS3.DeleteObject(input, options, default);
@@ -70,6 +70,59 @@ public class UnitTests
 
             CleanUp();
         }
+    }
+
+    [TestMethod]
+    public async Task DeleteSingleObject_WrongRegions()
+    {
+        var key = "Key1.txt";
+        var objects = new[] { new S3ObjectArray { BucketName = _bucketName, Key = key, VersionId = null } };
+        var regions = new List<Region>() {
+            Region.AfSouth1,
+            Region.ApEast1,
+            Region.ApNortheast1,
+            Region.ApNortheast2,
+            Region.ApNortheast3,
+            Region.ApSouth1,
+            Region.ApSoutheast1,
+            Region.ApSoutheast2,
+            Region.CaCentral1,
+            Region.CnNorth1,
+            Region.CnNorthWest1,
+            Region.EuNorth1,
+            Region.EuSouth1,
+            Region.EuWest1,
+            Region.EuWest2,
+            Region.EuWest3,
+            Region.MeSouth1,
+            Region.SaEast1,
+            Region.UsEast1,
+            Region.UsEast2,
+            Region.UsWest1,
+            Region.UsWest2 };
+
+        foreach (var region in regions)
+        {
+            await CreateTestFiles(objects);
+
+            var input = new Input()
+            {
+                AwsAccessKeyId = _accessKey,
+                AwsSecretAccessKey = _secretAccessKey,
+                Region = region,
+                Objects = objects,
+            };
+
+            var options = new Options()
+            {
+                NotExistsHandler = NotExistsHandler.None,
+            };
+
+            var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DeleteObject(input, options, default));
+            Assert.IsNotNull(ex);
+        }
+
+        CleanUp();
     }
 
     [TestMethod]
@@ -93,7 +146,7 @@ public class UnitTests
 
             var options = new Options()
             {
-                NotExistsHandler = handler
+                NotExistsHandler = handler,
             };
 
             var result = await AmazonS3.DeleteObject(input, options, default);
@@ -131,7 +184,7 @@ public class UnitTests
 
             var options = new Options()
             {
-                NotExistsHandler = handler
+                NotExistsHandler = handler,
             };
 
             var result = await AmazonS3.DeleteObject(input, options, default);
@@ -179,7 +232,7 @@ public class UnitTests
 
         var options = new Options()
         {
-            NotExistsHandler = NotExistsHandler.Info
+            NotExistsHandler = NotExistsHandler.Info,
         };
 
         // Delete one of the keys.
@@ -232,7 +285,7 @@ public class UnitTests
 
         var options = new Options()
         {
-            NotExistsHandler = NotExistsHandler.Throw
+            NotExistsHandler = NotExistsHandler.Throw,
         };
 
         var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DeleteObject(input, options, default));
@@ -256,7 +309,7 @@ public class UnitTests
 
         var options = new Options()
         {
-            NotExistsHandler = NotExistsHandler.None
+            NotExistsHandler = NotExistsHandler.None,
         };
 
         var ex = await Assert.ThrowsExceptionAsync<AmazonS3Exception>(async () => await AmazonS3.DeleteObject(input, options, default));
@@ -279,7 +332,7 @@ public class UnitTests
         };
         var options = new Options()
         {
-            NotExistsHandler = NotExistsHandler.None
+            NotExistsHandler = NotExistsHandler.None,
         };
 
         var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DeleteObject(input, options, default));
@@ -300,7 +353,7 @@ public class UnitTests
 
         var options = new Options()
         {
-            NotExistsHandler = NotExistsHandler.None
+            NotExistsHandler = NotExistsHandler.None,
         };
 
         var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.DeleteObject(input, options, default));
