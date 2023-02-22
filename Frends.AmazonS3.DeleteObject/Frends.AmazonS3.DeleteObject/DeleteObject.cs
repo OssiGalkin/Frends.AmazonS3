@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Collections.Generic;
 using Amazon.Runtime;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Frends.AmazonS3.DeleteObject;
 
@@ -120,6 +121,8 @@ public class AmazonS3
         return (response != null && response.S3Objects != null && response.S3Objects.Count > 0);
     }
 
+    // Excluded because there's no way to unit test each of these regions in all cases.
+    [ExcludeFromCodeCoverage]
     private static RegionEndpoint RegionSelection(Region region)
     {
         return region switch
