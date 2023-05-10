@@ -14,13 +14,14 @@ public class Result
     public bool Success { get; private set; }
 
     /// <summary>
-    /// List of download results.
+    /// List of downloaded objects.
     /// </summary>
-    public List<SingleResultObject> Results { get; private set; }
+    /// <example>{ "File.txt", "C:\temp\File.txt", true, false, "Additional information" }</example>
+    public List<SingleResultObject> Data { get; private set; }
 
-    internal Result(bool success, List<SingleResultObject> results)
+    internal Result(bool success, List<SingleResultObject> data)
     {
         Success = success;
-        Results = results;
+        Data = data;
     }
 }

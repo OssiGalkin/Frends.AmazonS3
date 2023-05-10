@@ -24,7 +24,7 @@ public class SingleResultObject
     public bool Overwritten { get; private set; }
 
     /// <summary>
-    /// Source object was deleted.
+    /// Source object was marked to be deleted.
     /// </summary>
     /// <example>false</example>
     public bool SourceDeleted { get; private set; }
