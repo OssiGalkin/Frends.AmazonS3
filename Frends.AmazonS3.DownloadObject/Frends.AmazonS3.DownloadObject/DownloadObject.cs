@@ -5,6 +5,7 @@ using Frends.AmazonS3.DownloadObject.Definitions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -170,6 +171,7 @@ public class AmazonS3
         }
     }
 
+    [ExcludeFromCodeCoverage]
     private static RegionEndpoint RegionSelection(Region region)
     {
         return region switch
