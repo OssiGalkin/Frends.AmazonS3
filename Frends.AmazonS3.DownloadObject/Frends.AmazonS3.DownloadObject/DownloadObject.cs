@@ -106,11 +106,10 @@ public class AmazonS3
             if (getObjectResponse != null || preSignedStream != null)
             {
                 using var outFile = File.Create(fullPath);
-                
-                if(getObjectResponse != null)
+
+                if (getObjectResponse != null)
                     getObjectResponse.ResponseStream.CopyTo(outFile);
-                else if (preSignedStream != null)
-                    preSignedStream.CopyTo(outFile);
+                else preSignedStream?.CopyTo(outFile);
             }
             else
                 throw new Exception("Write failed because the stream is empty.");
