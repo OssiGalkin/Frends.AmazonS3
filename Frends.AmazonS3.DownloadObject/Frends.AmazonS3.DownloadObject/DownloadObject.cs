@@ -92,13 +92,17 @@ public class AmazonS3
         {
             if (File.Exists(fullPath))
             {
-                if (input.DestinationFileExistsAction is DestinationFileExistsActions.Overwrite)
-                    if (FileLocked(input.FileLockedRetries, fullPath, cancellationToken))
-                        File.Delete(fullPath);
-                else if (input.DestinationFileExistsAction is DestinationFileExistsActions.Info)
-                    return new SingleResultObject(file, fullPath, false, sourceDeleted, "Object skipped because file already exists in destination.");
-                else
-                    throw new Exception($"File {fullPath} already exists");
+                switch (input.DestinationFileExistsAction)
+                {
+                    case DestinationFileExistsActions.Overwrite:
+                        if (!FileLocked(input.FileLockedRetries, fullPath, cancellationToken))
+                            File.Delete(fullPath);
+                        break;
+                    case DestinationFileExistsActions.Info:
+                        return new SingleResultObject(file, fullPath, false, sourceDeleted, "Object skipped because file already exists in destination.");
+                    case DestinationFileExistsActions.Error:
+                        throw new Exception($"File {fullPath} already exists");
+                }
             }
 
             if (!Directory.Exists(fullPath))
