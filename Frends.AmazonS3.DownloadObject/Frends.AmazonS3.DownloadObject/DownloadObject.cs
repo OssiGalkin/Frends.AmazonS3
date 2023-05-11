@@ -93,7 +93,8 @@ public class AmazonS3
             if (File.Exists(fullPath))
             {
                 if (input.DestinationFileExistsAction is DestinationFileExistsActions.Overwrite)
-                    File.Delete(fullPath);
+                    if (FileLocked(input.FileLockedRetries, fullPath, cancellationToken))
+                        File.Delete(fullPath);
                 else if (input.DestinationFileExistsAction is DestinationFileExistsActions.Info)
                     return new SingleResultObject(file, fullPath, false, sourceDeleted, "Object skipped because file already exists in destination.");
                 else
@@ -170,7 +171,7 @@ public class AmazonS3
         }
     }
 
-    [ExcludeFromCodeCoverage]
+    [ExcludeFromCodeCoverage(Justification = "There's no way to test them all.")]
     private static RegionEndpoint RegionSelection(Region region)
     {
         return region switch
