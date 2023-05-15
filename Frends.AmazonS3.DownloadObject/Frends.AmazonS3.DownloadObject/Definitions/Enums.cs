@@ -35,7 +35,7 @@ public enum Region
 /// <summary>
 /// Authentication methods.
 /// </summary>
-public enum AuthenticationMethod
+public enum AuthenticationMethods
 {
     /// <summary>
     /// AwsAccessKeyId+AwsSecretAccessKey.
@@ -51,7 +51,7 @@ public enum AuthenticationMethod
 /// <summary>
 /// Handle existing file.
 /// </summary>
-public enum DestinationFileExistsAction
+public enum DestinationFileExistsActions
 {
     /// <summary>
     /// Overwrite file.
