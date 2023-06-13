@@ -128,12 +128,12 @@ public class AmazonS3
                     var request = new GetObjectRequest
                     {
                         BucketName = connection.BucketName,
-                        Key = path
+                        Key = path,
                     };
                     await client.GetObjectAsync(request, cancellationToken);
                     throw new ArgumentException($"Object {file.Name} already exists in S3 at {request.Key}. Set Overwrite-option to true to overwrite the existing file.");
                 }
-                //Move on if ArgumentException is thrown.
+                //Move on if AmazonS3Exception is thrown.
                 catch (AmazonS3Exception) { }
             }
 

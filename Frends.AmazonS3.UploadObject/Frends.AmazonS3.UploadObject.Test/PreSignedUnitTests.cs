@@ -41,7 +41,7 @@ public class PreSignedUnitTests
         var deleteObjectRequest = new DeleteObjectRequest
         {
             BucketName = _bucketName,
-            Key = "Upload2022/PreSigned/UploadTest.txt"
+            Key = "Upload2023/PreSigned/UploadTest.txt"
         };
         client.DeleteObjectAsync(deleteObjectRequest);
     }
@@ -49,7 +49,7 @@ public class PreSignedUnitTests
     [TestMethod]
     public async Task PreSignedUnitTest_UploadObject()
     {
-        var setS3Key = $"Upload2022/PreSigned/UploadTest.txt";
+        var setS3Key = $"Upload2023/PreSigned/UploadTest.txt";
 
         _input = new Input
         {
