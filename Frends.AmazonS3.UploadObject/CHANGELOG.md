@@ -3,6 +3,7 @@
 ## [1.1.1] - 2023-06-13
 ### Changed
 - Connection.ThrowExceptionOnErrorResponse documentation update.
+- Improved exception handling.
 
 ## [1.1.0] - 2023-02-07
 ### Changed
