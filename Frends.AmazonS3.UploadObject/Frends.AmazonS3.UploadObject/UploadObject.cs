@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Net.Http;
+using System.Reflection;
+using System.Runtime.Loader;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -121,13 +123,18 @@ public class AmazonS3
         {
             if (!connection.Overwrite)
             {
-                var request = new GetObjectRequest
+                try
                 {
-                    BucketName = connection.BucketName,
-                    Key = path
-                };
-                await client.GetObjectAsync(request, cancellationToken);
-                throw new ArgumentException($"Object {file.Name} already exists in S3 at {request.Key}. Set Overwrite-option to true to overwrite the existing file.");
+                    var request = new GetObjectRequest
+                    {
+                        BucketName = connection.BucketName,
+                        Key = path
+                    };
+                    await client.GetObjectAsync(request, cancellationToken);
+                    throw new ArgumentException($"Object {file.Name} already exists in S3 at {request.Key}. Set Overwrite-option to true to overwrite the existing file.");
+                }
+                //Move on if ArgumentException is thrown.
+                catch (AmazonS3Exception) { }
             }
 
             var putObjectRequest = new PutObjectRequest
