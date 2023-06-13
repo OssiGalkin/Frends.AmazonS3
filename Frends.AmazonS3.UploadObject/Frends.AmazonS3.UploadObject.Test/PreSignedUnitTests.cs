@@ -1,12 +1,12 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Amazon;
-using System.IO;
 using Frends.AmazonS3.UploadObject.Definitions;
-using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Frends.AmazonS3.UploadObject.Tests;
 

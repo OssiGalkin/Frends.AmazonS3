@@ -21,6 +21,7 @@ public class Connection
     /// </summary>
     /// <example>"https://bucket.s3.region.amazonaws.com/object/file.txt?X-Amz-Expires=120X-Amz-Algorithm...</example>
     [PasswordPropertyText]
+    [DisplayFormat(DataFormatString = "Text")]
     [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.PreSignedURL)]
     public string PreSignedURL { get; set; }
 
@@ -29,6 +30,7 @@ public class Connection
     /// AWS Access Key ID. Enabled when using AWSCredentials.
     /// </summary>
     /// <example>AKIAQWERTY7NJ5Q7NZ6Q</example>
+    [DisplayFormat(DataFormatString = "Text")]
     [PasswordPropertyText]
     [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
     public string AwsAccessKeyId { get; set; }
@@ -37,6 +39,7 @@ public class Connection
     /// AWS Secret Access Key. Enabled when using AWSCredentials.
     /// </summary>
     /// <example>TVh5hgd3uGY/2CqH+Kkrrg3dadbXLsYe0jC3h+WD</example>
+    [DisplayFormat(DataFormatString = "Text")]
     [PasswordPropertyText]
     [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
     public string AwsSecretAccessKey { get; set; }
@@ -97,9 +100,9 @@ public class Connection
     /// <example>false</example>
     public bool ThrowErrorIfNoMatch { get; set; }
 
-    /// <summery>
+    /// <summary>
     /// Throws exception if error occures in upload.
-    /// </summery>
+    /// </summary>
     /// <example>false</example>
     [DefaultValue(false)]
     public bool ThrowExceptionOnErrorResponse { get; set; }

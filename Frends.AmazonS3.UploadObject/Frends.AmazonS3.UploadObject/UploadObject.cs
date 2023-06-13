@@ -1,21 +1,21 @@
-﻿using System;
-using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
-using Amazon;
+﻿using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
-using System.IO;
-using System.Collections.Generic;
-using System.Net.Http;
 using Frends.AmazonS3.UploadObject.Definitions;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Frends.AmazonS3.UploadObject;
 
 /// <summary>
-/// Amazon S3 task.
+/// Amazon S3 Task.
 /// </summary>
 public class AmazonS3
 {
