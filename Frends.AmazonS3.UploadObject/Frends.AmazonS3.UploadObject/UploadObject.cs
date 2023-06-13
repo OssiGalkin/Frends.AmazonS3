@@ -1,33 +1,22 @@
-﻿using System;
-using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
-using Amazon;
+﻿using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
-using System.IO;
-using System.Collections.Generic;
-using System.Net.Http;
 using Frends.AmazonS3.UploadObject.Definitions;
-using System.Reflection;
-using System.Runtime.Loader;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Frends.AmazonS3.UploadObject;
 
 /// <summary>
-/// Amazon S3 task.
+/// Amazon S3 Task.
 /// </summary>
 public class AmazonS3
 {
-    /// Mem cleanup.
-    static AmazonS3()
-    {
-        var currentAssembly = Assembly.GetExecutingAssembly();
-        var currentContext = AssemblyLoadContext.GetLoadContext(currentAssembly);
-        if (currentContext != null)
-            currentContext.Unloading += OnPluginUnloadingRequested;
-    }
-
     /// <summary>
     /// Upload objects to AWS S3 Bucket.
     /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.AmazonS3.UploadObject)
@@ -137,12 +126,13 @@ public class AmazonS3
                     var request = new GetObjectRequest
                     {
                         BucketName = connection.BucketName,
-                        Key = path
+                        Key = path,
                     };
                     await client.GetObjectAsync(request, cancellationToken);
                     throw new ArgumentException($"Object {file.Name} already exists in S3 at {request.Key}. Set Overwrite-option to true to overwrite the existing file.");
                 }
-                catch { }
+                //Move on if AmazonS3Exception is thrown.
+                catch (AmazonS3Exception) { }
             }
 
             var putObjectRequest = new PutObjectRequest
@@ -236,10 +226,5 @@ public class AmazonS3
             Region.UsWest2 => RegionEndpoint.USWest2,
             _ => RegionEndpoint.EUWest1,
         };
-    }
-
-    private static void OnPluginUnloadingRequested(AssemblyLoadContext obj)
-    {
-        obj.Unloading -= OnPluginUnloadingRequested;
     }
 }

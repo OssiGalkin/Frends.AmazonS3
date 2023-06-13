@@ -1,13 +1,13 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Amazon;
-using System.IO;
 using Frends.AmazonS3.UploadObject.Definitions;
-using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Frends.AmazonS3.UploadObject.Tests;
 
@@ -36,31 +36,29 @@ public class AWSCredsUnitTests
     }
 
     [TestCleanup]
-    public void CleanUp()
+    public async Task CleanUp()
     {
         if (Directory.Exists($@"{_dir}\AWS"))
             Directory.Delete($@"{_dir}\AWS", true);
 
         using var client = new AmazonS3Client(_accessKey, _secretAccessKey, RegionEndpoint.EUCentral1);
 
-        var keys = new List<string>
+        var listObjectRequest = new ListObjectsRequest
         {
-            "Upload2022/deletethis_awscreds.txt",
-            "Upload2022/deletethis_presign.txt",
-            "Upload2022/overwrite_awscreds.txt",
-            "Upload2022/overwrite_presign.txt",
-            "Upload2022/test1.txt",
-            "Upload2022/Subfolder/subfile.txt",
+            BucketName = _bucketName,
         };
 
-        foreach (var key in keys)
+        var response = await client.ListObjectsAsync(listObjectRequest);
+        var objects = response.S3Objects;
+
+        foreach (var obj in objects)
         {
             var deleteObjectRequest = new DeleteObjectRequest
             {
-                BucketName = _bucketName,
-                Key = key,
+                BucketName = obj.BucketName,
+                Key = obj.Key,
             };
-            client.DeleteObjectAsync(deleteObjectRequest);
+            await client.DeleteObjectAsync(deleteObjectRequest);
         }
     }
 
@@ -73,7 +71,7 @@ public class AWSCredsUnitTests
             ACL = default,
             FileMask = null,
             UseACL = false,
-            S3Directory = "Upload2022/",
+            S3Directory = "Upload2023/",
         };
         _connection = new Connection
         {
@@ -107,7 +105,7 @@ public class AWSCredsUnitTests
             ACL = default,
             FileMask = null,
             UseACL = false,
-            S3Directory = "Upload2022/",
+            S3Directory = "Upload2023/",
         };
         _connection = new Connection
         {
@@ -141,7 +139,7 @@ public class AWSCredsUnitTests
             ACL = default,
             FileMask = null,
             UseACL = false,
-            S3Directory = "Upload2022/",
+            S3Directory = "Upload2023/",
         };
         _connection = new Connection
         {
@@ -173,7 +171,7 @@ public class AWSCredsUnitTests
             ACL = default,
             FileMask = null,
             UseACL = false,
-            S3Directory = "Upload2022/",
+            S3Directory = "Upload2023/",
         };
         _connection = new Connection
         {
@@ -207,7 +205,7 @@ public class AWSCredsUnitTests
             ACL = default,
             FileMask = null,
             UseACL = false,
-            S3Directory = "Upload2022/",
+            S3Directory = "Upload2023/",
         };
         _connection = new Connection
         {
@@ -241,7 +239,7 @@ public class AWSCredsUnitTests
             ACL = default,
             FileMask = null,
             UseACL = false,
-            S3Directory = "Upload2022/",
+            S3Directory = "Upload2023/",
         };
         _connection = new Connection
         {
@@ -275,7 +273,7 @@ public class AWSCredsUnitTests
             ACL = default,
             FileMask = null,
             UseACL = false,
-            S3Directory = "Upload2022/",
+            S3Directory = "Upload2023/",
         };
         _connection = new Connection
         {
@@ -311,7 +309,7 @@ public class AWSCredsUnitTests
             ACL = default,
             FileMask = fileName,
             UseACL = false,
-            S3Directory = "Upload2022/",
+            S3Directory = "Upload2023/",
         };
         _connection = new Connection
         {
@@ -346,7 +344,7 @@ public class AWSCredsUnitTests
             ACL = default,
             FileMask = "notafile*",
             UseACL = false,
-            S3Directory = "Upload2022/",
+            S3Directory = "Upload2023/",
         };
         _connection = new Connection
         {
@@ -398,7 +396,7 @@ public class AWSCredsUnitTests
                 ACL = acl,
                 FileMask = null,
                 UseACL = true,
-                S3Directory = "Upload2022/",
+                S3Directory = "Upload2023/",
             };
 
             var result = await AmazonS3.UploadObject(_connection, _input, default);
@@ -407,7 +405,7 @@ public class AWSCredsUnitTests
             Assert.IsNotNull(result.DebugLog);
             Assert.IsTrue(result.UploadedObjects.Any(x => x.Contains("deletethis_awscreds.txt")));
 
-            CleanUp();
+            await CleanUp();
             Initialize();
         }
     }

@@ -1,12 +1,12 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Amazon;
-using System.IO;
 using Frends.AmazonS3.UploadObject.Definitions;
-using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Frends.AmazonS3.UploadObject.Tests;
 
@@ -41,7 +41,7 @@ public class PreSignedUnitTests
         var deleteObjectRequest = new DeleteObjectRequest
         {
             BucketName = _bucketName,
-            Key = "Upload2022/PreSigned/UploadTest.txt"
+            Key = "Upload2023/PreSigned/UploadTest.txt"
         };
         client.DeleteObjectAsync(deleteObjectRequest);
     }
@@ -49,7 +49,7 @@ public class PreSignedUnitTests
     [TestMethod]
     public async Task PreSignedUnitTest_UploadObject()
     {
-        var setS3Key = $"Upload2022/PreSigned/UploadTest.txt";
+        var setS3Key = $"Upload2023/PreSigned/UploadTest.txt";
 
         _input = new Input
         {
