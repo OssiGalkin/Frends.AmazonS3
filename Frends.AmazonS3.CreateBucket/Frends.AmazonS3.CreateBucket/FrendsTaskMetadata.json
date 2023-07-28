@@ -1,0 +1,7 @@
+{
+  "Tasks": [
+    {
+      "TaskMethod": "Frends.AmazonS3.CreateBucket.AmazonS3.CreateBucket"
+    }
+  ]
+}
