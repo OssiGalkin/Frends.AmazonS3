@@ -5,6 +5,7 @@ using Amazon.S3.Util;
 using Frends.AmazonS3.CreateBucket.Definitions;
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -62,6 +63,7 @@ public class AmazonS3
         }
     }
 
+    [ExcludeFromCodeCoverage(Justification = "can only test eu-central-1")]
     private static RegionEndpoint RegionSelection(Region region)
     {
         return region switch
@@ -93,6 +95,7 @@ public class AmazonS3
         };
     }
 
+    [ExcludeFromCodeCoverage(Justification = "can only test S3CannedACL.Private")]
     private static S3CannedACL GetS3CannedACL(ACLs acl)
     {
         return acl switch
