@@ -1,5 +1,5 @@
 # Frends.AmazonS3.CreateBucket
-Frends Task for uploading objects to Amazon S3.
+Frends Task for creating a new bucket to AWS S3.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) 
 [![Build](https://github.com/FrendsPlatform/Frends.AmazonS3/actions/workflows/CreateBucket_build_and_test_on_main.yml/badge.svg)](https://github.com/FrendsPlatform/Frends.AmazonS3/actions)
