@@ -1,0 +1,21 @@
+name: DeleteBucket main
+
+on:
+  push:
+    branches:    
+      - main
+    paths:
+      - 'Frends.AmazonS3.DeleteBucket/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: FrendsPlatform/FrendsTasks/.github/workflows/build_main.yml@main
+    with:
+      workdir: Frends.AmazonS3.DeleteBucket
+      env_var_name_1: HiQ_AWSS3Test_AccessKey
+      env_var_name_3: HiQ_AWSS3Test_SecretAccessKey
+    secrets:
+      badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
+      env_var_value_1: ${{ secrets.HIQ_AWSS3TEST_ACCESSKEY }}
+      env_var_value_3: ${{ secrets.HIQ_AWSS3TEST_SECRETACCESSKEY }}
