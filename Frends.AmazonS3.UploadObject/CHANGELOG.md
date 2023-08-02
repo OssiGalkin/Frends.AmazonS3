@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.2.0] - 2023-08-02
+### Added
+- Added multipart upload feature, which allows transferring files larger than 5GB.
+
 ## [1.1.1] - 2023-06-13
 ### Changed
 - Connection.ThrowExceptionOnErrorResponse documentation update.

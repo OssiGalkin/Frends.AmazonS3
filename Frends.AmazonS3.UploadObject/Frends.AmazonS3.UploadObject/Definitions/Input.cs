@@ -32,9 +32,19 @@ public class Input
     public string S3Directory { get; set; }
 
     /// <summary>
-    /// Enable/disable AWS S3 access control list. 
+    /// Specifies the size (in MB) of individual parts into which large files are divided when Connection.UseMultipartUpload = true.
+    /// Each part is limited to a minimum of 5 MB and a maximum of 5 TB in Amazon S3.
+    /// Recommended part sizes typically range from 10 MB to 100 MB for optimal performance.
+    /// </summary>
+    /// <example>10</example>
+    public long PartSize { get; set; }
+
+    /// <summary>
+    /// Enable/disable AWS S3 access control list.
+    /// Not supported when using multipart upload (Connection.UseMultipartUpload = true).
     /// </summary>
     /// <example>false</example>
+    [DefaultValue(false)]
     public bool UseACL { get; set; }
 
     /// <summary>
