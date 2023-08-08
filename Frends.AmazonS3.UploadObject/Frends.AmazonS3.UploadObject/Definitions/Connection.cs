@@ -26,6 +26,17 @@ public class Connection
     public string PreSignedURL { get; set; }
 
     #region AWSCredentials
+
+    /// <summary>
+    /// Use Multipart upload?
+    /// This is a method used to asynchronously initiate a multipart upload for a large object (file size over 5 GB) to Amazon S3. 
+    /// Multipart upload breaks the object into smaller parts, which are uploaded independently in parallel. 
+    /// </summary>
+    /// <example>true</example>
+    [UIHint(nameof(AuthenticationMethod), "", AuthenticationMethod.AWSCredentials)]
+    [DefaultValue(true)]
+    public bool UseMultipartUpload { get; set; }
+
     /// <summary>
     /// AWS Access Key ID. Enabled when using AWSCredentials.
     /// </summary>

@@ -73,6 +73,7 @@ public class PreSignedUnitTests
             ReturnListOfObjectKeys = false,
             DeleteSource = false,
             ThrowErrorIfNoMatch = false,
+            UseMultipartUpload = false,
         };
 
         var result = await AmazonS3.UploadObject(_connection, _input, default);
@@ -108,6 +109,7 @@ public class PreSignedUnitTests
             DeleteSource = false,
             ThrowErrorIfNoMatch = false,
             ThrowExceptionOnErrorResponse = false,
+            UseMultipartUpload = false,
         };
 
         var result = await AmazonS3.UploadObject(_connection, _input, default);
@@ -142,6 +144,7 @@ public class PreSignedUnitTests
             DeleteSource = false,
             ThrowErrorIfNoMatch = false,
             ThrowExceptionOnErrorResponse = true,
+            UseMultipartUpload = false,
         };
 
         var ex = await Assert.ThrowsExceptionAsync<UploadException>(async () => await AmazonS3.UploadObject(_connection, _input, default));

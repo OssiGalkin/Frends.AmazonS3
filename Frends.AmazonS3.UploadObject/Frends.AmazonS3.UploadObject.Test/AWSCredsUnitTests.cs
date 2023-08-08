@@ -87,6 +87,7 @@ public class AWSCredsUnitTests
             ReturnListOfObjectKeys = false,
             DeleteSource = false,
             ThrowErrorIfNoMatch = false,
+            UseMultipartUpload = false,
         };
 
         var result = await AmazonS3.UploadObject(_connection, _input, default);
@@ -121,7 +122,8 @@ public class AWSCredsUnitTests
             ReturnListOfObjectKeys = false,
             DeleteSource = false,
             ThrowErrorIfNoMatch = false,
-            ThrowExceptionOnErrorResponse = false
+            ThrowExceptionOnErrorResponse = false,
+            UseMultipartUpload = false,
         };
 
         var result = await AmazonS3.UploadObject(_connection, _input, default);
@@ -155,7 +157,8 @@ public class AWSCredsUnitTests
             ReturnListOfObjectKeys = false,
             DeleteSource = false,
             ThrowErrorIfNoMatch = false,
-            ThrowExceptionOnErrorResponse = true
+            ThrowExceptionOnErrorResponse = true,
+            UseMultipartUpload = false,
         };
 
         var ex = await Assert.ThrowsExceptionAsync<UploadException>(async () => await AmazonS3.UploadObject(_connection, _input, default));
@@ -187,6 +190,7 @@ public class AWSCredsUnitTests
             ReturnListOfObjectKeys = false,
             DeleteSource = false,
             ThrowErrorIfNoMatch = false,
+            UseMultipartUpload = false,
         };
 
         var result = await AmazonS3.UploadObject(_connection, _input, default);
@@ -221,6 +225,7 @@ public class AWSCredsUnitTests
             ReturnListOfObjectKeys = false,
             DeleteSource = false,
             ThrowErrorIfNoMatch = false,
+            UseMultipartUpload = false,
         };
 
         var result = await AmazonS3.UploadObject(_connection, _input, default);
@@ -255,6 +260,7 @@ public class AWSCredsUnitTests
             ReturnListOfObjectKeys = false,
             DeleteSource = false,
             ThrowErrorIfNoMatch = false,
+            UseMultipartUpload = false,
         };
 
         var result = await AmazonS3.UploadObject(_connection, _input, default);
@@ -289,6 +295,7 @@ public class AWSCredsUnitTests
             UploadFromCurrentDirectoryOnly = false,
             DeleteSource = false,
             ThrowErrorIfNoMatch = false,
+            UseMultipartUpload = false,
         };
 
         var result = await AmazonS3.UploadObject(_connection, _input, default);
@@ -325,6 +332,7 @@ public class AWSCredsUnitTests
             Overwrite = false,
             UploadFromCurrentDirectoryOnly = false,
             ThrowErrorIfNoMatch = false,
+            UseMultipartUpload = false,
         };
 
         var result = await AmazonS3.UploadObject(_connection, _input, default);
@@ -361,6 +369,7 @@ public class AWSCredsUnitTests
             Overwrite = false,
             UploadFromCurrentDirectoryOnly = false,
             ThrowExceptionOnErrorResponse = false,
+            UseMultipartUpload = false,
         };
 
         var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.UploadObject(_connection, _input, default));
@@ -386,6 +395,7 @@ public class AWSCredsUnitTests
             ReturnListOfObjectKeys = false,
             DeleteSource = false,
             ThrowErrorIfNoMatch = false,
+            UseMultipartUpload = false,
         };
 
         foreach (var acl in acls)

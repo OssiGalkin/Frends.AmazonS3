@@ -5,7 +5,9 @@ using Frends.AmazonS3.UploadObject.Definitions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,7 +30,8 @@ public class AmazonS3
     public static async Task<Result> UploadObject([PropertyTab] Connection connection, [PropertyTab] Input input, CancellationToken cancellationToken)
     {
 
-        if (!Directory.Exists(input.FilePath)) throw new ArgumentException(@"Source path not found. ", input.FilePath);
+        if (!Directory.Exists(input.FilePath)) throw new ArgumentException(@"Source directory not found. ", input.FilePath);
+        if (!Directory.EnumerateFileSystemEntries(input.FilePath).Any()) throw new ArgumentException(@"Directory is empty.", input.FilePath);
 
         var localRoot = new DirectoryInfo(input.FilePath);
 
@@ -51,6 +54,7 @@ public class AmazonS3
             foreach (var file in filesToCopy)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
                 if (file.FullName.Split(Path.DirectorySeparatorChar).Length > input.FilePath.Split(Path.DirectorySeparatorChar).Length && connection.PreserveFolderStructure)
                 {
                     var subfolders = file.FullName.Replace(file.Name, "").Replace(input.FilePath.Replace(file.Name, ""), "").Replace(Path.DirectorySeparatorChar, '/');
@@ -63,7 +67,12 @@ public class AmazonS3
                     if (connection.AuthenticationMethod is AuthenticationMethod.PreSignedURL)
                         await UploadFilePreSignedUrl(connection, file.FullName, cancellationToken);
                     else
-                        await UploadFileToS3(file, connection, fullPath, input, cancellationToken);
+                    {
+                        if (connection.UseMultipartUpload)
+                            await UploadMultipart(file, connection, input.PartSize, fullPath, cancellationToken);
+                        else
+                            await UploadFileToS3(file, connection, fullPath, input, cancellationToken);
+                    }
 
                     result.Add(connection.ReturnListOfObjectKeys ? fullPath : file.FullName);
                 }
@@ -72,7 +81,12 @@ public class AmazonS3
                     if (connection.AuthenticationMethod is AuthenticationMethod.PreSignedURL)
                         await UploadFilePreSignedUrl(connection, file.FullName, cancellationToken);
                     else
-                        await UploadFileToS3(file, connection, input.S3Directory + file.Name, input, cancellationToken);
+                    {
+                        if (connection.UseMultipartUpload)
+                            await UploadMultipart(file, connection, input.PartSize, input.S3Directory + file.Name, cancellationToken);
+                        else
+                            await UploadFileToS3(file, connection, input.S3Directory + file.Name, input, cancellationToken);
+                    }
 
                     result.Add(connection.ReturnListOfObjectKeys ? input.S3Directory + file.Name : file.FullName);
                 }
@@ -84,6 +98,17 @@ public class AmazonS3
             }
 
             return new Result(true, result, sw.ToString());
+        }
+        catch (AmazonS3Exception ex)
+        {
+            if (connection.ThrowExceptionOnErrorResponse)
+                throw new UploadException(sw.ToString(), ex.Message, ex.InnerException);
+
+            return new Result(
+                false,
+                result,
+                connection.AuthenticationMethod is AuthenticationMethod.AWSCredentials ? sw.ToString() : $"Exception: {ex.Message}, InnerException: {ex.InnerException}"
+                );
         }
         catch (Exception ex)
         {
@@ -115,9 +140,8 @@ public class AmazonS3
 
     private static async Task<PutObjectResponse> UploadFileToS3(FileInfo file, Connection connection, string path, Input input, CancellationToken cancellationToken)
     {
-        var region = RegionSelection(connection.Region);
         PutObjectResponse result;
-        using (var client = new AmazonS3Client(connection.AwsAccessKeyId, connection.AwsSecretAccessKey, region))
+        using (var client = new AmazonS3Client(connection.AwsAccessKeyId, connection.AwsSecretAccessKey, RegionSelection(connection.Region)))
         {
             if (!connection.Overwrite)
             {
@@ -147,6 +171,79 @@ public class AmazonS3
         };
 
         return result;
+    }
+
+    private static async Task UploadMultipart(FileInfo file, Connection connection, long partSize, string path, CancellationToken cancellationToken)
+    {
+        var uploadResponses = new List<UploadPartResponse>();
+
+        InitiateMultipartUploadRequest initiateRequest = new()
+        {
+            BucketName = connection.BucketName,
+            Key = path,
+        };
+
+        using var client = new AmazonS3Client(connection.AwsAccessKeyId, connection.AwsSecretAccessKey, RegionSelection(connection.Region));
+        var initResponse = await client.InitiateMultipartUploadAsync(initiateRequest, cancellationToken);
+
+        long partSizeInBytes = partSize * (long)Math.Pow(2, 20);
+        UploadPartRequest uploadRequest = null;
+        try
+        {
+            long filePosition = 0;
+            for (int i = 1; filePosition < file.Length; i++)
+            {
+                uploadRequest = new()
+                {
+                    BucketName = connection.BucketName,
+                    Key = path,
+                    UploadId = initResponse.UploadId,
+                    PartNumber = i,
+                    PartSize = partSizeInBytes,
+                    FilePosition = filePosition,
+                    FilePath = file.FullName,
+                };
+
+                uploadResponses.Add(await client.UploadPartAsync(uploadRequest, cancellationToken));
+
+                filePosition += partSizeInBytes;
+            }
+
+            CompleteMultipartUploadRequest completeRequest = new()
+            {
+                BucketName = connection.BucketName,
+                Key = path,
+                UploadId = initResponse.UploadId
+            };
+            completeRequest.AddPartETags(uploadResponses);
+
+            var completeUploadResponse = await client.CompleteMultipartUploadAsync(completeRequest, cancellationToken);
+        }
+        catch (Exception)
+        {
+            ListPartsRequest listPartsRequest = new()
+            {
+                UploadId = uploadRequest.UploadId
+            };
+
+            var listParts = await client.ListPartsAsync(listPartsRequest, cancellationToken);
+
+            while (listParts.Parts.Count > 0)
+            {
+                foreach (var part in listParts.Parts)
+                {
+                    AbortMultipartUploadRequest abortMPURequest = new()
+                    {
+                        BucketName = connection.BucketName,
+                        Key = path,
+                        UploadId = uploadRequest.UploadId
+                    };
+                    await client.AbortMultipartUploadAsync(abortMPURequest, cancellationToken);
+                }
+
+                listParts = await client.ListPartsAsync(listPartsRequest, cancellationToken);
+            }
+        }
     }
 
     private static void DeleteSourceFile(string filePath)
@@ -197,6 +294,7 @@ public class AmazonS3
         };
     }
 
+    [ExcludeFromCodeCoverage(Justification = "Only able to test EU central 1.")]
     private static RegionEndpoint RegionSelection(Region region)
     {
         return region switch
