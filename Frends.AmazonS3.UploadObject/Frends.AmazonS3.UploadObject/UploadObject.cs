@@ -5,6 +5,7 @@ using Frends.AmazonS3.UploadObject.Definitions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -218,7 +219,7 @@ public class AmazonS3
 
             var completeUploadResponse = await client.CompleteMultipartUploadAsync(completeRequest, cancellationToken);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             ListPartsRequest listPartsRequest = new()
             {
@@ -242,8 +243,6 @@ public class AmazonS3
 
                 listParts = await client.ListPartsAsync(listPartsRequest, cancellationToken);
             }
-
-            throw new Exception("An error occured while multipart upload. Operation has been aborted.", ex);
         }
     }
 
@@ -295,6 +294,7 @@ public class AmazonS3
         };
     }
 
+    [ExcludeFromCodeCoverage(Justification = "Only able to test EU central 1.")]
     private static RegionEndpoint RegionSelection(Region region)
     {
         return region switch
