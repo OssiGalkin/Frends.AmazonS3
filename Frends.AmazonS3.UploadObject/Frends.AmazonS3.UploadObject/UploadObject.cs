@@ -174,67 +174,76 @@ public class AmazonS3
 
     private static async Task UploadMultipart(FileInfo file, Connection connection, long partSize, string path, CancellationToken cancellationToken)
     {
-        // Create list to store upload part responses.
         var uploadResponses = new List<UploadPartResponse>();
 
-        // Setup information required to initiate the multipart upload.
         InitiateMultipartUploadRequest initiateRequest = new()
         {
             BucketName = connection.BucketName,
             Key = path,
         };
 
-        using (var client = new AmazonS3Client(connection.AwsAccessKeyId, connection.AwsSecretAccessKey, RegionSelection(connection.Region)))
+        using var client = new AmazonS3Client(connection.AwsAccessKeyId, connection.AwsSecretAccessKey, RegionSelection(connection.Region));
+        var initResponse = await client.InitiateMultipartUploadAsync(initiateRequest, cancellationToken);
+
+        long partSizeInBytes = partSize * (long)Math.Pow(2, 20);
+        UploadPartRequest uploadRequest = null;
+        try
         {
-            var initResponse = await client.InitiateMultipartUploadAsync(initiateRequest, cancellationToken);
-
-            long partSizeInBytes = partSize * (long)Math.Pow(2, 20);
-
-            try
+            long filePosition = 0;
+            for (int i = 1; filePosition < file.Length; i++)
             {
-                long filePosition = 0;
-                for (int i = 1; filePosition < file.Length; i++)
+                uploadRequest = new()
                 {
-                    UploadPartRequest uploadRequest = new()
+                    BucketName = connection.BucketName,
+                    Key = path,
+                    UploadId = initResponse.UploadId,
+                    PartNumber = i,
+                    PartSize = partSizeInBytes,
+                    FilePosition = filePosition,
+                    FilePath = file.FullName,
+                };
+
+                uploadResponses.Add(await client.UploadPartAsync(uploadRequest, cancellationToken));
+
+                filePosition += partSizeInBytes;
+            }
+
+            CompleteMultipartUploadRequest completeRequest = new()
+            {
+                BucketName = connection.BucketName,
+                Key = path,
+                UploadId = initResponse.UploadId
+            };
+            completeRequest.AddPartETags(uploadResponses);
+
+            var completeUploadResponse = await client.CompleteMultipartUploadAsync(completeRequest, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            ListPartsRequest listPartsRequest = new()
+            {
+                UploadId = uploadRequest.UploadId
+            };
+
+            var listParts = await client.ListPartsAsync(listPartsRequest, cancellationToken);
+
+            while (listParts.Parts.Count > 0)
+            {
+                foreach (var part in listParts.Parts)
+                {
+                    AbortMultipartUploadRequest abortMPURequest = new()
                     {
                         BucketName = connection.BucketName,
                         Key = path,
-                        UploadId = initResponse.UploadId,
-                        PartNumber = i,
-                        PartSize = partSizeInBytes,
-                        FilePosition = filePosition,
-                        FilePath = file.FullName,
+                        UploadId = uploadRequest.UploadId
                     };
-
-                    // Upload a part and add the response to our list.
-                    uploadResponses.Add(await client.UploadPartAsync(uploadRequest, cancellationToken));
-
-                    filePosition += partSizeInBytes;
+                    await client.AbortMultipartUploadAsync(abortMPURequest, cancellationToken);
                 }
 
-                // Setup to complete the upload.
-                CompleteMultipartUploadRequest completeRequest = new()
-                {
-                    BucketName = connection.BucketName,
-                    Key = path,
-                    UploadId = initResponse.UploadId
-                };
-                completeRequest.AddPartETags(uploadResponses);
+                listParts = await client.ListPartsAsync(listPartsRequest, cancellationToken);
+            }
 
-                // Complete the upload.
-                var completeUploadResponse = await client.CompleteMultipartUploadAsync(completeRequest, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                // Abort the upload.
-                AbortMultipartUploadRequest abortMPURequest = new()
-                {
-                    BucketName = connection.BucketName,
-                    Key = path,
-                    UploadId = initResponse.UploadId
-                };
-                await client.AbortMultipartUploadAsync(abortMPURequest, cancellationToken);
-            }
+            throw new Exception("An error occured while multipart upload. Operation has been aborted.", ex);
         }
     }
 
