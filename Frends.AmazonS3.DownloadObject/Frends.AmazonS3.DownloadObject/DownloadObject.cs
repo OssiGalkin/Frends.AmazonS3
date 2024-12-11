@@ -175,10 +175,7 @@ public class AmazonS3
 
             var deleted = await client.DeleteObjectAsync(deleteObjectRequest, cancellationToken);
 
-            if (deleted.DeleteMarker == "true")
-                return true;
-            else
-                return false;
+            return string.IsNullOrEmpty(deleted.DeleteMarker) ? false : bool.Parse(deleted.DeleteMarker);
         }
         catch (Exception ex)
         {
