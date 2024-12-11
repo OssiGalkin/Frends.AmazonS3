@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.1.0] - 2024-12-11
+### Updated
+- Listing updated to newer version.
 ## [2.1.0] - 2023-05-10
 ### Fixed
 - Changed the way the Task handles downloaded objects to fix blank PDF files.
