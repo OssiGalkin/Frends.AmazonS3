@@ -47,7 +47,7 @@ public class AmazonS3
                         Delimiter = null,
                         Encoding = null,
                         FetchOwner = false,
-                        MaxKeys = 10000,
+                        MaxKeys = 1000,
                         Prefix = string.IsNullOrWhiteSpace(input.S3Directory) ? null : input.S3Directory,
                         StartAfter = null
                     };
