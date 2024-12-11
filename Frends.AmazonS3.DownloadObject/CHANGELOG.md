@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.0] - 2024-12-11
+## [2.2.0] - 2024-12-11
 ### Updated
 - Listing updated to newer version.
 ## [2.1.0] - 2023-05-10
