@@ -41,7 +41,18 @@ public class AmazonS3
                 var targetPath = input.S3Directory + input.SearchPattern;
                 using (AmazonS3Client client = new(input.AwsAccessKeyId, input.AwsSecretAccessKey, RegionSelection(input.Region)))
                 {
-                    var allObjectsResponse = await client.ListObjectsAsync(input.BucketName, cancellationToken);
+                    var clientRequest = new ListObjectsV2Request
+                    {
+                        BucketName = input.BucketName,
+                        Delimiter = null,
+                        Encoding = null,
+                        FetchOwner = false,
+                        MaxKeys = 1000,
+                        Prefix = string.IsNullOrWhiteSpace(input.S3Directory) ? null : input.S3Directory,
+                        StartAfter = null
+                    };
+
+                    var allObjectsResponse = await client.ListObjectsV2Async(clientRequest, cancellationToken);
                     foreach (var fileObject in allObjectsResponse.S3Objects)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
@@ -164,10 +175,7 @@ public class AmazonS3
 
             var deleted = await client.DeleteObjectAsync(deleteObjectRequest, cancellationToken);
 
-            if (deleted.DeleteMarker.Equals("true"))
-                return true;
-            else
-                return false;
+            return string.IsNullOrEmpty(deleted.DeleteMarker) ? false : bool.Parse(deleted.DeleteMarker);
         }
         catch (Exception ex)
         {
