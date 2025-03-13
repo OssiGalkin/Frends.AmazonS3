@@ -421,6 +421,7 @@ public class AWSCredsUnitTests
         }
     }
 
+    [TestMethod]
     public async Task AWSCreds_Upload_ShouldNotThrow_IfEmptyFolder_AndThrowErrorIfNoMatchIsFalse()
     {
         _input = new Input
@@ -454,6 +455,7 @@ public class AWSCredsUnitTests
         Assert.IsNotNull(result.DebugLog);
     }
 
+    [TestMethod]
     public async Task AWSCreds_Upload_ShouldThrow_IfEmptyFolder_AndThrowErrorIfNoMatchIsTrue()
     {
         _input = new Input
