@@ -27,6 +27,7 @@ public class AWSCredsUnitTests
     {
         Directory.CreateDirectory($@"{_dir}\AWS");
         Directory.CreateDirectory($@"{_dir}\AWS\Subfolder");
+        Directory.CreateDirectory($@"{_dir}\AWS\EmptyFolder");
 
         File.AppendAllText($@"{_dir}\AWS\test1.txt", "test1");
         File.AppendAllText($@"{_dir}\AWS\Subfolder\subfile.txt", "From subfolder.");
@@ -418,5 +419,69 @@ public class AWSCredsUnitTests
             await CleanUp();
             Initialize();
         }
+    }
+
+    public async Task AWSCreds_Upload_ShouldNotThrow_IfEmptyFolder_AndThrowErrorIfNoMatchIsFalse()
+    {
+        _input = new Input
+        {
+            FilePath = $@"{_dir}\AWS\EmptyFolder",
+            ACL = default,
+            FileMask = null,
+            UseACL = false,
+            S3Directory = "Upload2023/",
+        };
+        _connection = new Connection
+        {
+            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
+            PreSignedURL = null,
+            AwsAccessKeyId = _accessKey,
+            AwsSecretAccessKey = _secretAccessKey,
+            BucketName = _bucketName,
+            Region = Region.EuCentral1,
+            UploadFromCurrentDirectoryOnly = false,
+            Overwrite = false,
+            PreserveFolderStructure = false,
+            ReturnListOfObjectKeys = false,
+            DeleteSource = false,
+            ThrowErrorIfNoMatch = false,
+            UseMultipartUpload = false,
+        };
+
+        var result = await AmazonS3.UploadObject(_connection, _input, default);
+        Assert.AreEqual(0, result.UploadedObjects.Count);
+        Assert.IsTrue(result.Success);
+        Assert.IsNotNull(result.DebugLog);
+    }
+
+    public async Task AWSCreds_Upload_ShouldThrow_IfEmptyFolder_AndThrowErrorIfNoMatchIsTrue()
+    {
+        _input = new Input
+        {
+            FilePath = $@"{_dir}\AWS\EmptyFolder",
+            ACL = default,
+            FileMask = null,
+            UseACL = false,
+            S3Directory = "Upload2023/",
+        };
+        _connection = new Connection
+        {
+            AuthenticationMethod = AuthenticationMethod.AWSCredentials,
+            PreSignedURL = null,
+            AwsAccessKeyId = _accessKey,
+            AwsSecretAccessKey = _secretAccessKey,
+            BucketName = _bucketName,
+            Region = Region.EuCentral1,
+            UploadFromCurrentDirectoryOnly = false,
+            Overwrite = false,
+            PreserveFolderStructure = false,
+            ReturnListOfObjectKeys = false,
+            DeleteSource = false,
+            ThrowErrorIfNoMatch = true,
+            UseMultipartUpload = false,
+        };
+
+        var ex = await Assert.ThrowsExceptionAsync<Exception>(async () => await AmazonS3.UploadObject(_connection, _input, default));
+        Assert.IsTrue(ex.Message.Contains($"No files match the filemask '*' within supplied path."));
     }
 }
