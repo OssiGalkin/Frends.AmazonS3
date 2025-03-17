@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.0] - 2025-03-13
+### Fixed
+- Fixed issue where ThrowErrorIfNoMatch was not correctly handled. Now, no error is thrown if set to false, and an error is thrown if set to true when no files match."
+
 ## [1.2.0] - 2023-08-02
 ### Added
 - Added multipart upload feature, which allows transferring files larger than 5GB.

@@ -31,7 +31,6 @@ public class AmazonS3
     {
 
         if (!Directory.Exists(input.FilePath)) throw new ArgumentException(@"Source directory not found. ", input.FilePath);
-        if (!Directory.EnumerateFileSystemEntries(input.FilePath).Any()) throw new ArgumentException(@"Directory is empty.", input.FilePath);
 
         var localRoot = new DirectoryInfo(input.FilePath);
 
@@ -41,7 +40,7 @@ public class AmazonS3
             connection.UploadFromCurrentDirectoryOnly ? SearchOption.TopDirectoryOnly : SearchOption.AllDirectories);
 
         if (connection.ThrowErrorIfNoMatch && filesToCopy.Length < 1)
-            throw new Exception($"No files match the filemask '{input.FileMask}' within supplied path.");
+            throw new Exception($"No files match the filemask '{input.FileMask ?? "*"}' within supplied path.");
 
         var result = new List<string>();
         var sw = new StringWriter();
