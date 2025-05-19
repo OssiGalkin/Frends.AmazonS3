@@ -47,7 +47,7 @@ public class AmazonS3
 
         try
         {
-            AWSConfigs.LoggingConfig.LogTo = LoggingOptions.Console;
+            AWSConfigs.LoggingConfig.LogTo = LoggingOptions.None; 
             Console.SetOut(sw);
 
             foreach (var file in filesToCopy)
